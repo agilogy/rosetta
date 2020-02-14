@@ -1,16 +1,15 @@
-name: Greet Everyone
-# This workflow is triggered on pushes to the repository.
+name: Continuous Integration
 on: [push]
-
 jobs:
   build:
-    # Job name is Greeting
     name: Build
-    # This job runs on Linux
     runs-on: ubuntu-latest
     steps:
       - name: Build rosetta
+        id: rosetta
         uses: lokkju/github-action-sbt@master
         with:
           commands: build
           sbt_project_directory: ./rosetta
+      - name: Echo Rosetta duration
+        run: echo 'The time was ${{ steps.rosetta.outputs.time }}.'
