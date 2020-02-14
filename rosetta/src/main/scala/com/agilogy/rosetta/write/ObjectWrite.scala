@@ -12,7 +12,7 @@ trait ObjectWrite[NW[_], A] { self =>
       case (name, writes) => (name, nativeWrite.contramap(writes)(f))
     })
 
-  def product[O, B](fb: ObjectWrite[NW, B]): ObjectWrite[NW, (A, B)] = {
+  def product[B](fb: ObjectWrite[NW, B]): ObjectWrite[NW, (A, B)] = {
     val newAttributes = self.contramap[(A, B)](_._1).attributes ++ fb.contramap[(A, B)](_._2).attributes
     ObjectWrite.apply(newAttributes)
   }
@@ -32,7 +32,7 @@ object ObjectWrite {
     new Contravariant[ObjectWrite[NW, *]] {
       override def contramap[A, B](fa: ObjectWrite[NW, A])(f: B => A): ObjectWrite[NW, B] = fa.contramap(f)
     }
-  implicit def objectWriterSemigroupal[NW[_], O]: Semigroupal[ObjectWrite[NW, *]] =
+  implicit def objectWriterSemigroupal[NW[_]]: Semigroupal[ObjectWrite[NW, *]] =
     new Semigroupal[ObjectWrite[NW, *]] {
       override def product[A, B](fa: ObjectWrite[NW, A], fb: ObjectWrite[NW, B]): ObjectWrite[NW, (A, B)] =
         fa.product(fb)

@@ -1,7 +1,7 @@
 package com.agilogy.rosetta.protocol
 
 import com.agilogy.rosetta.engine.Engine
-import com.agilogy.rosetta.read.{ NativeRead, Read }
+import com.agilogy.rosetta.read.{ NativeRead, ObjectRead, Read }
 import com.agilogy.rosetta.rw.{ ObjectReadWrite, ReadWrite }
 import com.agilogy.rosetta.write.{ NativeWrite, ObjectWrite, Write }
 
@@ -16,10 +16,11 @@ abstract class Protocol[NR[_], I, E, NW[_], O](engine: Engine[NR, I, E, NW, O]) 
   protected implicit def nativeReadInstance: NativeRead[NR, E] = engine.nativeReadInstance
 
   protected implicit class ReaderStringSyntax(self: String) {
-    def read[A: Read[NR, E, *]]: Read[NR, E, A]              = Read.of(engine.attributeNativeRead(self)(Read[NR, E, A].nativeReader))
-    def readOr[A: Read[NR, E, *]](orElse: A): Read[NR, E, A] = readOpt[A].map(_.getOrElse(orElse))
-    def readOpt[A: Read[NR, E, *]]: Read[NR, E, Option[A]] =
-      Read.of(engine.optionalAttributeNativeRead(self)(Read[NR, E, A].nativeReader))
+    def read[A: Read[NR, E, *]]: ObjectRead[NR, E, A] =
+      ObjectRead(List(self), engine.attributeNativeRead(self)(Read[NR, E, A].nativeReader))
+    def readOr[A: Read[NR, E, *]](orElse: A): ObjectRead[NR, E, A] = readOpt[A].map(_.getOrElse(orElse))
+    def readOpt[A: Read[NR, E, *]]: ObjectRead[NR, E, Option[A]] =
+      ObjectRead(List(self), engine.optionalAttributeNativeRead(self)(Read[NR, E, A].nativeReader))
 
   }
 

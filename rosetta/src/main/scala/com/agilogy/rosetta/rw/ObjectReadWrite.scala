@@ -1,11 +1,10 @@
 package com.agilogy.rosetta.rw
 
 import cats.{ Invariant, Semigroupal }
-
-import com.agilogy.rosetta.read.{ NativeRead, Read }
+import com.agilogy.rosetta.read.{ NativeRead, ObjectRead, Read }
 import com.agilogy.rosetta.write.{ NativeWrite, ObjectWrite }
 
-final case class ObjectReadWrite[NR[_], NW[_], E, A](reader: Read[NR, E, A], writer: ObjectWrite[NW, A])
+final case class ObjectReadWrite[NR[_], NW[_], E, A](reader: ObjectRead[NR, E, A], writer: ObjectWrite[NW, A])
     extends ObjectWrite[NW, A]
     with Read[NR, E, A] {
 
@@ -23,7 +22,7 @@ final case class ObjectReadWrite[NR[_], NW[_], E, A](reader: Read[NR, E, A], wri
   def product[O, B](fb: ObjectReadWrite[NR, NW, E, B]): ObjectReadWrite[NR, NW, E, (A, B)] =
     ObjectReadWrite(reader.product(fb.reader), writer.product(fb.writer))
 
-  override def apply(name: String): ReadWrite[NR, NW, E, A] = ReadWrite(reader, writer(name))
+  override def apply(name: String): ReadWrite[NR, NW, E, A] = ReadWrite(reader(name), writer(name))
 }
 
 object ObjectReadWrite {

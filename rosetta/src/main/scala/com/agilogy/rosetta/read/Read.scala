@@ -1,7 +1,7 @@
 package com.agilogy.rosetta.read
 
 import cats.implicits._
-import cats.{ Functor, Semigroupal }
+import cats.Functor
 
 trait Read[NR[_], E, A] { self =>
   def nativeReader: NR[A]
@@ -14,9 +14,6 @@ trait Read[NR[_], E, A] { self =>
 
   def andThen[B](f: A => Either[E, B]): Read[NR, E, B] =
     Read.of[NR, E, B](nativeRead.andThen(nativeReader)(f))
-
-  def product[B](fb: Read[NR, E, B]): Read[NR, E, (A, B)] =
-    Read.of[NR, E, (A, B)](nativeReader product fb.nativeReader)
 }
 
 object Read {
@@ -27,8 +24,5 @@ object Read {
   }
   implicit def readerFunctor[NR[_], I, E]: Functor[Read[NR, E, *]] = new Functor[Read[NR, E, *]] {
     override def map[A, B](fa: Read[NR, E, A])(f: A => B): Read[NR, E, B] = fa.map(f)
-  }
-  implicit def readerSemigroupal[NR[_], I, E]: Semigroupal[Read[NR, E, *]] = new Semigroupal[Read[NR, E, *]] {
-    override def product[A, B](fa: Read[NR, E, A], fb: Read[NR, E, B]): Read[NR, E, (A, B)] = fa.product(fb)
   }
 }
