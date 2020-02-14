@@ -5,11 +5,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Build rosetta
-        id: rosetta
+      - name: Build all
+        id: build
         uses: lokkju/github-action-sbt@master
         with:
           commands: build
-          sbt_project_directory: ./rosetta
-      - name: Echo Rosetta duration
-        run: echo 'The time was ${{ steps.rosetta.outputs.time }}.'
+      - name: Print duration
+        run: echo 'The time was ${{ steps.build.outputs.time }}.'
