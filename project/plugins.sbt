@@ -1,0 +1,12 @@
+resolvers += Resolver.bintrayRepo("ktosopl", "sbt-plugins/sbt-jcstress")
+
+addSbtPlugin("org.foundweekends"                 % "sbt-bintray"               % "0.5.6")
+addSbtPlugin("org.scalameta"                     % "sbt-scalafmt"              % "2.3.0")
+addSbtPlugin("com.thoughtworks.sbt-api-mappings" % "sbt-api-mappings"          % "3.0.0")
+addSbtPlugin("com.github.cb372"                  % "sbt-explicit-dependencies" % "0.2.11")
+addSbtPlugin("de.heikoseeberger"                 % "sbt-header"                % "5.3.1")
+addSbtPlugin("org.scalameta"                     % "sbt-mdoc"                  % "1.3.6")
+addSbtPlugin("ch.epfl.scala"                     % "sbt-bloop"                 % "1.3.5")
+addSbtPlugin("com.dwijnand"                      % "sbt-dynver"                % "4.0.0")
+addSbtPlugin("ch.epfl.scala"                     % "sbt-scalafix"              % "0.9.11")
+addSbtPlugin("org.wartremover"                   % "sbt-wartremover"           % "2.4.3")
