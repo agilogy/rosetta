@@ -5,6 +5,16 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Cache SBT ivy cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2/cache
+          key: ${{ runner.os }}-sbt-ivy-cache-${{ hashFiles('**/build.sbt') }}
+      - name: Cache SBT
+        uses: actions/cache@v1
+        with:
+          path: ~/.sbt
+          key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
       - name: Build all
         id: build
         uses: lokkju/github-action-sbt@master
@@ -12,3 +22,4 @@ jobs:
           commands: build
       - name: Print duration
         run: echo 'The time was ${{ steps.build.outputs.time }}.'
+
