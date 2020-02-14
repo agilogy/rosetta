@@ -9,6 +9,7 @@ lazy val root = project
   .in(file("."))
   .settings(welcomeMessage)
   .aggregate(rosetta, rosettaCaliban, rosettaCirce)
+  .settings(skip in publish := true)
 
 lazy val rosetta = project.module
   .settings(

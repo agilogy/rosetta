@@ -16,11 +16,7 @@ jobs:
         with:
           path: ~/.sbt
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
-      - name: Build all
-        id: build
+      - name: Check build
         uses: lokkju/github-action-sbt@master
         with:
-          commands: build
-      - name: Print duration
-        run: echo 'The time was ${{ steps.build.outputs.time }}.'
-
+          commands: check
