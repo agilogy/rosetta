@@ -9,7 +9,7 @@ import com.agilogy.rosetta.circe.PersonReadProtocol._
 import com.agilogy.rosetta.read.ReadErrorCause.NativeReadError
 import com.agilogy.rosetta.read.{ ReadError, Segment }
 
-class CirceReadProtocolSpec extends munit.FunSuite {
+class CirceReadSpec extends munit.FunSuite {
 
   test("read a primitive as a wrapper class") {
     assertEquals(read[Age]("5"), Age(5).asRight[ReadError])

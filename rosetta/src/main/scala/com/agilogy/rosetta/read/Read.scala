@@ -1,7 +1,7 @@
 package com.agilogy.rosetta.read
 
-import cats.implicits._
 import cats.Functor
+import cats.implicits._
 
 trait Read[NR[_], E, A] { self =>
   def nativeReader: NR[A]

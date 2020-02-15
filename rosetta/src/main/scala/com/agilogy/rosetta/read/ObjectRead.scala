@@ -1,8 +1,9 @@
 package com.agilogy.rosetta.read
 
-import com.github.ghik.silencer.silent
-import cats.{ Functor, Semigroupal }
 import cats.implicits._
+import cats.{ Functor, Semigroupal }
+
+import com.github.ghik.silencer.silent
 
 trait ObjectRead[NR[_], E, A] { self =>
 

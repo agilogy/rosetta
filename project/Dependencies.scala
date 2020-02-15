@@ -45,6 +45,7 @@ trait Typelevel {
   private val org         = "org.typelevel"
   private val catsVersion = "2.0.0"
 
+  val catsKernel    = org %% "cats-kernel"    % catsVersion
   val catsCore      = org %% "cats-core"      % catsVersion
   val kindProjector = org %% "kind-projector" % "0.11.0" cross CrossVersion.full
   val simulacrum    = org %% "simulacrum"     % "1.0.0"

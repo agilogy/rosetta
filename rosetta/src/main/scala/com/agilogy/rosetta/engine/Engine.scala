@@ -2,6 +2,7 @@ package com.agilogy.rosetta.engine
 
 import com.agilogy.rosetta.read.{ NativeRead, Read, ReadError }
 import com.agilogy.rosetta.rw.ReadWrite
+import com.agilogy.rosetta.schema.Schema.ListSchema
 import com.agilogy.rosetta.write.{ NativeWrite, ObjectWrite, Write }
 
 trait Engine[NR[_], I, E, NW[_], O] {
@@ -15,7 +16,7 @@ trait Engine[NR[_], I, E, NW[_], O] {
 
   final type RW[A] = ReadWrite[NR, NW, E, A]
   final def RW[A](implicit readEvidence: Read[NR, E, A], writeEvidence: Write[NW, A]): RW[A] =
-    ReadWrite(readEvidence, writeEvidence)
+    ReadWrite.of(readEvidence, writeEvidence)
 
   implicit def nativeReadInstance: NativeRead[NR, E]
 
@@ -35,7 +36,7 @@ trait Engine[NR[_], I, E, NW[_], O] {
   final def write[A](value: A)(implicit writer: W[A]): O = writeNative(value)(writer.nativeWriter)
 
   def listNativeWrite[A: NW]: NW[List[A]]
-  implicit def listWrite[A: W]: W[List[A]] = Write.of(listNativeWrite[A](W[A].nativeWriter))
+  implicit def listWrite[A: W]: W[List[A]] = Write.of(listNativeWrite[A](W[A].nativeWriter), ListSchema(W[A].schema))
 
-  implicit final def listRW[A](implicit R: R[A], W: W[A]): RW[List[A]] = ReadWrite(listRead[A](R), listWrite[A](W))
+  implicit final def listRW[A](implicit R: R[A], W: W[A]): RW[List[A]] = ReadWrite.of(listRead[A](R), listWrite[A](W))
 }
