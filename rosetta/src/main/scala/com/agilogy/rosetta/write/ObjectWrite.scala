@@ -6,25 +6,25 @@ import com.agilogy.rosetta.schema.Schema.RecordSchema
 
 trait ObjectWrite[NW[_], A] { self =>
 
-  private[rosetta] def attributes: List[(String, Write[NW, A])]
+  private[rosetta] def writeAttributes: List[(String, Write[NW, A])]
   implicit def nativeWrite: NativeWrite[NW]
 
   def contramap[B](f: B => A): ObjectWrite[NW, B] =
-    ObjectWrite(attributes.map {
+    ObjectWrite(writeAttributes.map {
       case (name, writes) => (name, writes.contramap(f))
     })
 
   def product[B](fb: ObjectWrite[NW, B]): ObjectWrite[NW, (A, B)] = {
-    val newAttributes = self.contramap[(A, B)](_._1).attributes ++ fb.contramap[(A, B)](_._2).attributes
+    val newAttributes = self.contramap[(A, B)](_._1).writeAttributes ++ fb.contramap[(A, B)](_._2).writeAttributes
     ObjectWrite.apply(newAttributes)
   }
 
   def apply(name: String): Write[NW, A] =
     Write.of(
-      nativeWrite.nativeObjectWriter(name, attributes.map {
+      nativeWrite.nativeObjectWriter(name, writeAttributes.map {
         case (name, writes) => (name, writes.nativeWriter)
       }),
-      RecordSchema(name, attributes.map {
+      RecordSchema(name, writeAttributes.map {
         case (name, w) => (name, w.schema)
       })
     )
@@ -34,8 +34,8 @@ object ObjectWrite {
 
   def apply[NW[_], A](attrs: List[(String, Write[NW, A])])(implicit N: NativeWrite[NW]): ObjectWrite[NW, A] =
     new ObjectWrite[NW, A] {
-      override private[rosetta] def attributes: List[(String, Write[NW, A])] = attrs
-      override implicit def nativeWrite: NativeWrite[NW]                     = N
+      override private[rosetta] def writeAttributes: List[(String, Write[NW, A])] = attrs
+      override implicit def nativeWrite: NativeWrite[NW]                          = N
     }
 
   implicit def objectWriterContravariant[NW[_]]: Contravariant[ObjectWrite[NW, *]] =

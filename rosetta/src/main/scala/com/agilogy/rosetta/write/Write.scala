@@ -19,8 +19,8 @@ object Write {
     override implicit def contravariant: Contravariant[NW] = C
     override def schema: Schema                            = s
   }
-  implicit def contravariantWriter[NW[_]: Contravariant, O]: Contravariant[Write[NW, *]] =
-    new Contravariant[Write[NW, *]] {
-      override def contramap[A, B](fa: Write[NW, A])(f: B => A): Write[NW, B] = fa.contramap(f)
-    }
+//  implicit def contravariantWriter[NW[_]: Contravariant, O]: Contravariant[Write[NW, *]] =
+//    new Contravariant[Write[NW, *]] {
+//      override def contramap[A, B](fa: Write[NW, A])(f: B => A): Write[NW, B] = fa.contramap(f)
+//    }
 }

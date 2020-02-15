@@ -28,7 +28,8 @@ trait Engine[NR[_], I, E, NW[_], O] {
 
   def listNativeRead[A: NR]: NR[List[A]]
 
-  implicit final def listRead[A](implicit ER: R[A]): R[List[A]] = Read.of(listNativeRead[A](ER.nativeReader))
+  implicit final def listRead[A](implicit ER: R[A]): R[List[A]] =
+    Read.of(listNativeRead[A](ER.nativeReader), ListSchema(R[A].schema))
 
   implicit def nativeWriteInstance: NativeWrite[NW]
 

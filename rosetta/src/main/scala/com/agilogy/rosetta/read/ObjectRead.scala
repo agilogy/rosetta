@@ -3,39 +3,41 @@ package com.agilogy.rosetta.read
 import cats.implicits._
 import cats.{ Functor, Semigroupal }
 
-import com.github.ghik.silencer.silent
+import com.agilogy.rosetta.schema.Schema
+import com.agilogy.rosetta.schema.Schema.RecordSchema
 
 trait ObjectRead[NR[_], E, A] { self =>
 
-  private[rosetta] def attributes: List[String]
+  private[rosetta] def readAttributes: List[(String, Schema)]
   def nativeReader: NR[A]
   implicit def nativeRead: NativeRead[NR, E]
 
   def map[B](f: A => B): ObjectRead[NR, E, B] =
-    ObjectRead(attributes, nativeReader.map(f))
+    ObjectRead(readAttributes, nativeReader.map(f))
 
   def leftMap(f: E => E): ObjectRead[NR, E, A] =
-    ObjectRead(attributes, nativeRead.leftMap(nativeReader)(f))
+    ObjectRead(readAttributes, nativeRead.leftMap(nativeReader)(f))
 
   def andThen[B](f: A => Either[E, B]): ObjectRead[NR, E, B] =
-    ObjectRead(attributes, nativeRead.andThen(nativeReader)(f))
+    ObjectRead(readAttributes, nativeRead.andThen(nativeReader)(f))
 
   def product[B](fb: ObjectRead[NR, E, B]): ObjectRead[NR, E, (A, B)] = {
-    val newAttributes = self.attributes ::: fb.attributes
+    val newAttributes = self.readAttributes ::: fb.readAttributes
     ObjectRead.apply(newAttributes, self.nativeReader.product(fb.nativeReader))
   }
 
-  @silent("is never used")
-  def apply(name: String): Read[NR, E, A] = Read.of(nativeReader)
+  def apply(name: String): Read[NR, E, A] = Read.of(nativeReader, RecordSchema(name, readAttributes))
 }
 
 object ObjectRead {
 
-  def apply[NR[_], E, A](attrs: List[String], read: NR[A])(implicit N: NativeRead[NR, E]): ObjectRead[NR, E, A] =
+  def apply[NR[_], E, A](attrs: List[(String, Schema)], read: NR[A])(
+    implicit N: NativeRead[NR, E]
+  ): ObjectRead[NR, E, A] =
     new ObjectRead[NR, E, A] {
-      override private[rosetta] def attributes: List[String] = attrs
-      override implicit def nativeRead: NativeRead[NR, E]    = N
-      override def nativeReader: NR[A]                       = read
+      override private[rosetta] def readAttributes: List[(String, Schema)] = attrs
+      override implicit def nativeRead: NativeRead[NR, E]                  = N
+      override def nativeReader: NR[A]                                     = read
     }
 
   implicit def objectReaderFunctor[NR[_], E]: Functor[ObjectRead[NR, E, *]] =

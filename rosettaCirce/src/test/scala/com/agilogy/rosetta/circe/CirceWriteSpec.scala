@@ -2,8 +2,6 @@ package com.agilogy.rosetta.circe
 
 import com.agilogy.rosetta.circe.CirceStringEngine.write
 import com.agilogy.rosetta.circe.PersonWriteProtocol._
-import com.agilogy.rosetta.schema.Schema
-import com.agilogy.rosetta.schema.Schema.{ AtomSchema, ListSchema }
 
 class CirceWriteSpec extends munit.FunSuite {
 
@@ -32,19 +30,8 @@ class CirceWriteSpec extends munit.FunSuite {
     )
   }
 
-  test("get the schema of a writes") {
-    val stringSchema = AtomSchema("String")
-    val intSchema    = AtomSchema("Int")
-    val personSchema =
-      Schema.record(
-        "Person",
-        "name"           -> stringSchema,
-        "age"            -> intSchema,
-        "favoriteColors" -> ListSchema(stringSchema),
-        "brothersAges"   -> ListSchema(intSchema)
-      )
-    val departmentSchema = Schema.record("Department", "name" -> stringSchema, "head" -> personSchema)
-    assertEquals(fooWrite.schema, Schema.record("Foo", "dept" -> departmentSchema))
+  test("get the schema of a write") {
+    assertEquals(fooWrite.schema, Expected.fooSchema)
   }
 
 }

@@ -2,8 +2,6 @@ package com.agilogy.rosetta.circe
 
 import cats.implicits._
 
-import munit.TestOptions
-
 import com.agilogy.rosetta.circe.CirceStringEngine.read
 import com.agilogy.rosetta.circe.PersonReadProtocol._
 import com.agilogy.rosetta.read.ReadErrorCause.NativeReadError
@@ -66,5 +64,7 @@ class CirceReadSpec extends munit.FunSuite {
     )
   }
 
-  override def munitRunTest(options: TestOptions, body: => Any): Any = super.munitRunTest(options, body)
+  test("get the schema of a read") {
+    assertEquals(fooRead.schema, Expected.fooSchema)
+  }
 }
