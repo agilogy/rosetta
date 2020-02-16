@@ -37,6 +37,7 @@ trait Engine[NR[_], I, E, NW[_], O] {
   final def write[A](value: A)(implicit writer: W[A]): O = writeNative(value)(writer.nativeWriter)
 
   def listNativeWrite[A: NW]: NW[List[A]]
+  def optionalNativeWrite[A: NW]: NW[Option[A]]
   implicit def listWrite[A: W]: W[List[A]] = Write.of(listNativeWrite[A](W[A].nativeWriter), ListSchema(W[A].schema))
 
   implicit final def listRW[A](implicit R: R[A], W: W[A]): RW[List[A]] = ReadWrite.of(listRead[A](R), listWrite[A](W))

@@ -11,7 +11,7 @@ object PersonWriteProtocol extends Protocol(CirceStringEngine) {
   implicit val personWrites: W[Person] =
     (
       "name".write[String],
-      "age".write[Age],
+      "age".writeOpt[Age],
       "favoriteColors".write[List[String]],
       "brothersAges".write[List[Age]]
     ).contramapN[Person](p => (p.name, p.age, p.favoriteColors, p.brothersAges)).apply("Person")

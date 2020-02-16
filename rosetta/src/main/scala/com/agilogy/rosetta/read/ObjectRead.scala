@@ -3,12 +3,11 @@ package com.agilogy.rosetta.read
 import cats.implicits._
 import cats.{ Functor, Semigroupal }
 
-import com.agilogy.rosetta.schema.Schema
-import com.agilogy.rosetta.schema.Schema.RecordSchema
+import com.agilogy.rosetta.schema.Schema.{ AttributeSchema, RecordSchema }
 
 trait ObjectRead[NR[_], E, A] { self =>
 
-  private[rosetta] def readAttributes: List[(String, Schema)]
+  private[rosetta] def readAttributes: List[AttributeSchema]
   def nativeReader: NR[A]
   implicit def nativeRead: NativeRead[NR, E]
 
@@ -31,13 +30,13 @@ trait ObjectRead[NR[_], E, A] { self =>
 
 object ObjectRead {
 
-  def apply[NR[_], E, A](attrs: List[(String, Schema)], read: NR[A])(
+  def apply[NR[_], E, A](attrs: List[AttributeSchema], read: NR[A])(
     implicit N: NativeRead[NR, E]
   ): ObjectRead[NR, E, A] =
     new ObjectRead[NR, E, A] {
-      override private[rosetta] def readAttributes: List[(String, Schema)] = attrs
-      override implicit def nativeRead: NativeRead[NR, E]                  = N
-      override def nativeReader: NR[A]                                     = read
+      override private[rosetta] def readAttributes: List[AttributeSchema] = attrs
+      override implicit def nativeRead: NativeRead[NR, E]                 = N
+      override def nativeReader: NR[A]                                    = read
     }
 
   implicit def objectReaderFunctor[NR[_], E]: Functor[ObjectRead[NR, E, *]] =

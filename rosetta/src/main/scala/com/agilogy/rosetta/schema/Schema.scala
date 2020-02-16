@@ -6,9 +6,17 @@ import cats.implicits._
 
 sealed trait Schema
 
+sealed trait AttributeRequirement
+object AttributeRequirement {
+  case object Mandatory                    extends AttributeRequirement
+  case object Optional                     extends AttributeRequirement
+  final case class DefaultsTo[A](value: A) extends AttributeRequirement
+}
+
 object Schema {
-  final case class RecordSchema(name: String, attributes: List[(String, Schema)]) extends Schema
-  def record(name: String, attributes: (String, Schema)*): Schema = RecordSchema(name, attributes.toList)
+  final case class AttributeSchema(name: String, attributeType: Schema, required: AttributeRequirement)
+  final case class RecordSchema(name: String, attributes: List[AttributeSchema]) extends Schema
+  def record(name: String, attributes: AttributeSchema*): Schema = RecordSchema(name, attributes.toList)
   final case class ListSchema(elementsSchema: Schema) extends Schema
   final case class AtomSchema(name: String)           extends Schema
 

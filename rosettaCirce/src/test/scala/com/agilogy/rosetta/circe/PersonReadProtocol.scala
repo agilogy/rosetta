@@ -12,7 +12,7 @@ object PersonReadProtocol extends Protocol(CirceStringEngine) {
   implicit val personReads: R[Person] =
     (
       "name".read[String],
-      "age".read[Age],
+      "age".readOpt[Age],
       "favoriteColors".readOr[List[String]](List.empty),
       "brothersAges".readOr[List[Age]](List.empty)
     ).mapN(Person.apply).apply("Person")

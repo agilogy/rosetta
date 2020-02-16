@@ -40,6 +40,7 @@ trait CirceEngine[I] extends Engine[Decoder, I, DecodingFailure, Encoder, String
 
   override def writeNative[A: Encoder](value: A): String = Encoder[A].apply(value).noSpaces
   override def listNativeWrite[A: NW]: NW[List[A]]       = Encoder.encodeList[A]
+  override def optionalNativeWrite[A: NW]: NW[Option[A]] = Encoder[Option[A]]
 
   override implicit def nativeWriteInstance: NativeWrite[Encoder] = new NativeWrite[Encoder] {
 

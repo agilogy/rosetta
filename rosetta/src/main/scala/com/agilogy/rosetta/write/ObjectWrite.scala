@@ -2,16 +2,16 @@ package com.agilogy.rosetta.write
 
 import cats.{ Contravariant, Semigroupal }
 
-import com.agilogy.rosetta.schema.Schema.RecordSchema
+import com.agilogy.rosetta.schema.Schema.{ AttributeSchema, RecordSchema }
 
 trait ObjectWrite[NW[_], A] { self =>
 
-  private[rosetta] def writeAttributes: List[(String, Write[NW, A])]
+  private[rosetta] def writeAttributes: List[(AttributeSchema, Write[NW, A])]
   implicit def nativeWrite: NativeWrite[NW]
 
   def contramap[B](f: B => A): ObjectWrite[NW, B] =
     ObjectWrite(writeAttributes.map {
-      case (name, writes) => (name, writes.contramap(f))
+      case (s, writes) => (s, writes.contramap(f))
     })
 
   def product[B](fb: ObjectWrite[NW, B]): ObjectWrite[NW, (A, B)] = {
@@ -22,20 +22,20 @@ trait ObjectWrite[NW[_], A] { self =>
   def apply(name: String): Write[NW, A] =
     Write.of(
       nativeWrite.nativeObjectWriter(name, writeAttributes.map {
-        case (name, writes) => (name, writes.nativeWriter)
+        case (s, writes) => (s.name, writes.nativeWriter)
       }),
       RecordSchema(name, writeAttributes.map {
-        case (name, w) => (name, w.schema)
+        case (s, _) => s
       })
     )
 }
 
 object ObjectWrite {
 
-  def apply[NW[_], A](attrs: List[(String, Write[NW, A])])(implicit N: NativeWrite[NW]): ObjectWrite[NW, A] =
+  def apply[NW[_], A](attrs: List[(AttributeSchema, Write[NW, A])])(implicit N: NativeWrite[NW]): ObjectWrite[NW, A] =
     new ObjectWrite[NW, A] {
-      override private[rosetta] def writeAttributes: List[(String, Write[NW, A])] = attrs
-      override implicit def nativeWrite: NativeWrite[NW]                          = N
+      override private[rosetta] def writeAttributes: List[(AttributeSchema, Write[NW, A])] = attrs
+      override implicit def nativeWrite: NativeWrite[NW]                                   = N
     }
 
   implicit def objectWriterContravariant[NW[_]]: Contravariant[ObjectWrite[NW, *]] =

@@ -20,7 +20,7 @@ class CirceReadSpec extends munit.FunSuite {
   test("read an object") {
     assertEquals(
       read[Person]("""{"name":"John", "age":5}"""),
-      Person("John", Age(5), List.empty, List.empty).asRight[ReadError]
+      Person("John", Option(Age(5)), List.empty, List.empty).asRight[ReadError]
     )
   }
 
@@ -45,14 +45,14 @@ class CirceReadSpec extends munit.FunSuite {
   test("read a list of primitive attributes") {
     assertEquals(
       read[Person]("""{"name":"Mary", "age":5, "favoriteColors":["green", "blue"]}"""),
-      Person("Mary", Age(5), List("green", "blue")).asRight[ReadError]
+      Person("Mary", Option(Age(5)), List("green", "blue")).asRight[ReadError]
     )
   }
 
   test("read a list of mapped attributes") {
     assertEquals(
       read[Person]("""{"name":"Mary", "age":5, "brothersAges":[3, 7]}"""),
-      Person("Mary", Age(5), brothersAges = List(Age(3), Age(7))).asRight[ReadError]
+      Person("Mary", Option(Age(5)), brothersAges = List(Age(3), Age(7))).asRight[ReadError]
     )
   }
 

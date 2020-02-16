@@ -3,7 +3,7 @@ package com.agilogy.rosetta.circe
 final case class Age(value: Int)
 final case class Person(
   name: String,
-  age: Age,
+  age: Option[Age],
   favoriteColors: List[String] = List.empty,
   brothersAges: List[Age] = List.empty
 )

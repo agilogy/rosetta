@@ -3,6 +3,7 @@ package com.agilogy.rosetta.rw
 import cats.{ Invariant, Semigroupal }
 
 import com.agilogy.rosetta.read.{ NativeRead, ObjectRead }
+import com.agilogy.rosetta.schema.Schema.AttributeSchema
 import com.agilogy.rosetta.write.{ NativeWrite, ObjectWrite, Write }
 
 final case class ObjectReadWrite[NR[_], NW[_], E, A](reader: ObjectRead[NR, E, A], writer: ObjectWrite[NW, A])
@@ -16,7 +17,7 @@ final case class ObjectReadWrite[NR[_], NW[_], E, A](reader: ObjectRead[NR, E, A
 
   override implicit val nativeWrite: NativeWrite[NW] = writer.nativeWrite
 
-  override private[rosetta] def writeAttributes: List[(String, Write[NW, A])] = writer.writeAttributes
+  override private[rosetta] def writeAttributes: List[(AttributeSchema, Write[NW, A])] = writer.writeAttributes
 
   def imap[B](f: A => B)(g: B => A): ObjectReadWrite[NR, NW, E, B] = ObjectReadWrite(reader.map(f), writer.contramap(g))
   def iAndThen[B](f: A => Either[E, B])(g: B => A): ObjectReadWrite[NR, NW, E, B] =
