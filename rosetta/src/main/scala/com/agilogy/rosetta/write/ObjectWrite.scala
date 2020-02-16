@@ -2,37 +2,47 @@ package com.agilogy.rosetta.write
 
 import cats.{ Contravariant, Semigroupal }
 
+import com.agilogy.rosetta.schema.Schema.{ AttributeSchema, RecordSchema }
+
 trait ObjectWrite[NW[_], A] { self =>
 
-  private[rosetta] def attributes: List[(String, NW[A])]
+  private[rosetta] def writeAttributes: List[(AttributeSchema, Write[NW, A])]
   implicit def nativeWrite: NativeWrite[NW]
 
   def contramap[B](f: B => A): ObjectWrite[NW, B] =
-    ObjectWrite(attributes.map {
-      case (name, writes) => (name, nativeWrite.contramap(writes)(f))
+    ObjectWrite(writeAttributes.map {
+      case (s, writes) => (s, writes.contramap(f))
     })
 
-  def product[O, B](fb: ObjectWrite[NW, B]): ObjectWrite[NW, (A, B)] = {
-    val newAttributes = self.contramap[(A, B)](_._1).attributes ++ fb.contramap[(A, B)](_._2).attributes
+  def product[B](fb: ObjectWrite[NW, B]): ObjectWrite[NW, (A, B)] = {
+    val newAttributes = self.contramap[(A, B)](_._1).writeAttributes ++ fb.contramap[(A, B)](_._2).writeAttributes
     ObjectWrite.apply(newAttributes)
   }
 
-  def apply(name: String): Write[NW, A] = Write.of(nativeWrite.nativeObjectWriter(name, attributes))
+  def apply(name: String): Write[NW, A] =
+    Write.of(
+      nativeWrite.nativeObjectWriter(name, writeAttributes.map {
+        case (s, writes) => (s.name, writes.nativeWriter)
+      }),
+      RecordSchema(name, writeAttributes.map {
+        case (s, _) => s
+      })
+    )
 }
 
 object ObjectWrite {
 
-  def apply[NW[_], A](attrs: List[(String, NW[A])])(implicit N: NativeWrite[NW]): ObjectWrite[NW, A] =
+  def apply[NW[_], A](attrs: List[(AttributeSchema, Write[NW, A])])(implicit N: NativeWrite[NW]): ObjectWrite[NW, A] =
     new ObjectWrite[NW, A] {
-      override private[rosetta] def attributes: List[(String, NW[A])] = attrs
-      override implicit def nativeWrite: NativeWrite[NW]              = N
+      override private[rosetta] def writeAttributes: List[(AttributeSchema, Write[NW, A])] = attrs
+      override implicit def nativeWrite: NativeWrite[NW]                                   = N
     }
 
   implicit def objectWriterContravariant[NW[_]]: Contravariant[ObjectWrite[NW, *]] =
     new Contravariant[ObjectWrite[NW, *]] {
       override def contramap[A, B](fa: ObjectWrite[NW, A])(f: B => A): ObjectWrite[NW, B] = fa.contramap(f)
     }
-  implicit def objectWriterSemigroupal[NW[_], O]: Semigroupal[ObjectWrite[NW, *]] =
+  implicit def objectWriterSemigroupal[NW[_]]: Semigroupal[ObjectWrite[NW, *]] =
     new Semigroupal[ObjectWrite[NW, *]] {
       override def product[A, B](fa: ObjectWrite[NW, A], fb: ObjectWrite[NW, B]): ObjectWrite[NW, (A, B)] =
         fa.product(fb)

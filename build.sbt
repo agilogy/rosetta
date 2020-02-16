@@ -14,6 +14,7 @@ lazy val root = project
 lazy val rosetta = project.module
   .settings(
     libraryDependencies ++= Seq(
+      catsKernel,
       catsCore
     )
   )

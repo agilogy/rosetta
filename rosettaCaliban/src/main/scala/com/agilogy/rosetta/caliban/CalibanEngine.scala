@@ -35,6 +35,9 @@ object CalibanEngine extends Engine[ArgBuilder, InputValue, ExecutionError, Sche
 
   override def listNativeWrite[A: Schema.Typeclass]: Schema.Typeclass[List[A]] = Schema.listSchema[A]
 
+  override def optionalNativeWrite[A: _root_.caliban.schema.Schema.Typeclass]: Schema.Typeclass[Option[A]] =
+    Schema.optionSchema[A]
+
   override def readNative[A: ArgBuilder](input: InputValue): Either[ReadError, A] =
     implicitly[ArgBuilder[A]]
       .build(input)

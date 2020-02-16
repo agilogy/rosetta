@@ -40,16 +40,23 @@ trait CirceEngine[I] extends Engine[Decoder, I, DecodingFailure, Encoder, String
 
   override def writeNative[A: Encoder](value: A): String = Encoder[A].apply(value).noSpaces
   override def listNativeWrite[A: NW]: NW[List[A]]       = Encoder.encodeList[A]
+  override def optionalNativeWrite[A: NW]: NW[Option[A]] = Encoder[Option[A]]
 
   override implicit def nativeWriteInstance: NativeWrite[Encoder] = new NativeWrite[Encoder] {
 
-    @silent("Recursion")
-    override def nativeObjectWriter[A](name: String, attributes: List[(String, NW[A])]): Encoder[A] = attributes match {
-      case Nil             => Encoder.instance(_ => Json.obj())
-      case (a1, e1) :: Nil => Encoder.forProduct1(a1)(identity[A])(e1)
-      case l =>
-        val (l0, l1) = l.splitAt(l.length / 2)
-        Encoder(a => nativeObjectWriter(name, l0)(a) deepMerge nativeObjectWriter(name, l1)(a))
+    override def nativeObjectWriter[A](name: String, attributes: List[(String, NW[A])]): Encoder[A] = {
+
+      @silent("Recursion")
+      def f(attributes: List[(String, NW[A])]): Encoder[A] =
+        attributes match {
+          case Nil             => Encoder.instance(_ => Json.obj())
+          case (a1, e1) :: Nil => Encoder.forProduct1(a1)(identity[A])(e1)
+          case l =>
+            val (l0, l1) = l.splitAt(l.length / 2)
+            Encoder(a => f(l0)(a) deepMerge f(l1)(a))
+        }
+
+      f(attributes.reverse)
     }
 
     override def contramap[A, B](fa: Encoder[A])(f: B => A): Encoder[B] = fa.contramap(f)
