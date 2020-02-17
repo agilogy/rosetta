@@ -20,6 +20,6 @@ object ReadWrite {
       override def nativeReader: NR[A]                       = reader.nativeReader
       override implicit val nativeRead: NativeRead[NR, E]    = reader.nativeRead
       override implicit def contravariant: Contravariant[NW] = writer.contravariant
-      override def schema: Schema                            = writer.schema
+      override def schema: Schema                            = reader.schema
     }
 }

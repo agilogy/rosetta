@@ -1,9 +1,12 @@
 package com.agilogy.rosetta.circe
 
-import com.agilogy.rosetta.circe.CirceStringEngine.write
-import com.agilogy.rosetta.circe.PersonWriteProtocol._
+import com.github.ghik.silencer.silent
 
-class CirceWriteSpec extends munit.FunSuite {
+import com.agilogy.rosetta.circe.CirceStringEngine.W
+import com.agilogy.rosetta.circe.CirceStringEngine.write
+
+@silent("ImplicitParameter")
+abstract class CirceWriteSpec(implicit ageWrite: W[Age], personWrite: W[Person]) extends munit.FunSuite {
 
   test("write a primitive as a wrapper class") {
     assertEquals(write(Age(5)), "5")
@@ -35,10 +38,6 @@ class CirceWriteSpec extends munit.FunSuite {
       write(Person("Mary", Option(Age(5)), brothersAges = List(Age(3), Age(7)))),
       """{"name":"Mary","age":5,"favoriteColors":[],"brothersAges":[3,7]}"""
     )
-  }
-
-  test("get the schema of a write") {
-    assertEquals(fooWrite.schema, Expected.withoutDefaultValues(Expected.fooSchema))
   }
 
 }

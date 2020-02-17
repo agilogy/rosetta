@@ -59,6 +59,10 @@ abstract class Protocol[NR[_], I, E, NW[_], O](engine: Engine[NR, I, E, NW, O]) 
   protected implicit class RWStringSyntax(self: String) {
     def rw[A: Read[NR, E, *]: Write[NW, *]]: ObjectReadWrite[NR, NW, E, A] =
       ObjectReadWrite(self.read[A], self.write[A])
+    def rwOpt[A: Read[NR, E, *]: Write[NW, *]]: ObjectReadWrite[NR, NW, E, Option[A]] =
+      ObjectReadWrite(self.readOpt[A], self.writeOpt[A])
+    def rwOr[A: Read[NR, E, *]: Write[NW, *]](orElse: A): ObjectReadWrite[NR, NW, E, A] =
+      ObjectReadWrite(self.readOr(orElse), self.write[A])
   }
 
 }
