@@ -13,33 +13,29 @@ object Segment {
   }
 }
 
-//sealed trait ReadErrorCause
-//object ReadErrorCause {
-//  final case class NativeReadError[E](error: E)        extends ReadErrorCause
-//  final case class MissingAttribute(attribute: String) extends ReadErrorCause
-//}
-//final case class ReadError(cause: ReadErrorCause, path: List[Segment]) extends Exception {
-//  def at(p: List[Segment]): ReadError = ReadError(cause, p ::: path)
-//
-//  override def toString: String = s"""ReadError("${path.mkString("/")}", $cause)"""
-//}
-
-sealed trait ReadError
+sealed trait ReadError extends Exception
 
 object ReadError {
 
   def ofRecord(errors: (String, ReadError)*): ReadError =
     RecordReadError(errors.map(_.leftMap(Segment.Attribute)).toMap)
-  final case class RecordReadError(errors: Map[Segment.Attribute, ReadError]) extends ReadError
+  final case class RecordReadError(errors: Map[Segment.Attribute, ReadError]) extends ReadError {
+    override def getMessage: String = s"Error reading record: ${errors.mkString(",")}"
+  }
   def ofArray(errors: (Int, ReadError)*): ReadError =
     ArrayReadError(errors.map(_.leftMap(Segment.ArrayElement)).toMap)
-  final case class ArrayReadError(errors: Map[Segment.ArrayElement, ReadError]) extends ReadError
+  final case class ArrayReadError(errors: Map[Segment.ArrayElement, ReadError]) extends ReadError {
+    override def getMessage: String = s"Error reading array: ${errors.mkString(",")}"
+  }
   sealed trait AtomicReadError extends ReadError {
     def message: String
+    override def getMessage: String = message
   }
   def atomic(message: String): ReadError = SimpleMessageReadError(message)
-  final case class SimpleMessageReadError(message: String)       extends AtomicReadError
-  final case class NativeReadError[E](message: String, error: E) extends AtomicReadError
+  final case class SimpleMessageReadError(message: String) extends AtomicReadError
+  final case class NativeReadError[E](message: String, error: E) extends AtomicReadError {
+    override def getMessage: String = s"$message ($error)"
+  }
   final case class MissingAttributeError(attribute: Segment.Attribute) extends AtomicReadError {
     override def message: String = s"Attribute ${attribute.name} is required but missing"
   }
