@@ -2,9 +2,10 @@ package com.agilogy.rosetta.circe
 
 import cats.implicits._
 
+import com.github.ghik.silencer.silent
+
 import com.agilogy.rosetta.circe.CirceStringEngine.{ read, R }
 import com.agilogy.rosetta.read.ReadError
-import com.github.ghik.silencer.silent
 
 @silent("ImplicitParameter")
 abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fooRead: R[Foo]) extends munit.FunSuite {

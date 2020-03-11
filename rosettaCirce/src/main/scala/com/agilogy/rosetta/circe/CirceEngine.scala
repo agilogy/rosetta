@@ -3,12 +3,13 @@ package com.agilogy.rosetta.circe
 import cats.data.NonEmptyList
 import cats.implicits._
 
-import com.agilogy.rosetta.engine.Engine
-import com.agilogy.rosetta.read.{ NativeRead, ReadError, Segment }
-import com.agilogy.rosetta.read.ReadError.AtomicReadError
-import com.agilogy.rosetta.write.NativeWrite
 import com.github.ghik.silencer.silent
 import io.circe.{ parser, CursorOp, Decoder, DecodingFailure, Encoder, Error, Json }
+
+import com.agilogy.rosetta.engine.Engine
+import com.agilogy.rosetta.read.ReadError.AtomicReadError
+import com.agilogy.rosetta.read.{ NativeRead, ReadError, Segment }
+import com.agilogy.rosetta.write.NativeWrite
 
 trait CirceEngine[I] extends Engine[Decoder, I, DecodingFailure, Encoder, String] {
 
