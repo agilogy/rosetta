@@ -1,13 +1,13 @@
 package com.agilogy.rosetta.circe
 
+import cats.data.NonEmptyList
 import cats.implicits._
 
 import com.github.ghik.silencer.silent
-import io.circe.Decoder.Result
-import io.circe.{ parser, CursorOp, Decoder, DecodingFailure, Encoder, Error, HCursor, Json }
+import io.circe.{ parser, CursorOp, Decoder, DecodingFailure, Encoder, Error, Json }
 
 import com.agilogy.rosetta.engine.Engine
-import com.agilogy.rosetta.read.ReadErrorCause.NativeReadError
+import com.agilogy.rosetta.read.ReadError.AtomicReadError
 import com.agilogy.rosetta.read.{ NativeRead, ReadError, Segment }
 import com.agilogy.rosetta.write.NativeWrite
 
@@ -28,13 +28,10 @@ trait CirceEngine[I] extends Engine[Decoder, I, DecodingFailure, Encoder, String
       override def product[A, B](fa: Decoder[A], fb: Decoder[B]): Decoder[(A, B)] = fa.product(fb)
 
       override def andThen[A, B](nativeRead: NR[A])(f: A => Either[DecodingFailure, B]): NR[B] =
-        new Decoder[B] {
-          override def apply(c: HCursor): Result[B] = nativeRead.apply(c).flatMap(f)
-        }
+        nativeRead.emapTry(a => f(a).toTry)
 
-      override def leftMap[A](nativeRead: NR[A])(f: DecodingFailure => DecodingFailure): NR[A] = new Decoder[A] {
-        override def apply(c: HCursor): Result[A] = nativeRead(c).leftMap(f)
-      }
+      override def leftMap[A](nativeRead: NR[A])(f: DecodingFailure => DecodingFailure): NR[A] =
+        nativeRead.adaptErr { case x => f(x) }
     }
   type NW[A] = Encoder[A]
 
@@ -65,33 +62,45 @@ trait CirceEngine[I] extends Engine[Decoder, I, DecodingFailure, Encoder, String
 }
 
 object CirceEngine {
+
+  def mapReadErrors(errors: NonEmptyList[Error]): ReadError = errors.map(mapReadError).reduce
+
+  private def mapAtomicError(message: String): AtomicReadError = message match {
+    case "C[A]" => ReadError.SimpleMessageReadError("Array expected")
+    case _      => ReadError.SimpleMessageReadError(s"$message expected")
+  }
+
   @silent("automatic toString")
-  def mapReadErrors(e: Error): ReadError = e match {
+  @silent("Recursion")
+  def mapReadError(e: Error): ReadError = e match {
+    case DecodingFailure("Attempt to decode value on failed cursor", _ :: tail) =>
+      mapReadError(DecodingFailure("Object", tail))
     case DecodingFailure(msg, path) =>
       ReadError(
-        NativeReadError(msg),
-        path.foldLeft(List.empty[Segment]) {
-          case (acc, CursorOp.DownField(field))                      => Segment.Attribute(field) :: acc
-          case (Segment.ArrayElement(i) :: tail, CursorOp.DownArray) => Segment.ArrayElement(i) :: tail
-          case (acc, CursorOp.DownArray)                             => Segment.ArrayElement(0) :: acc
-          case (Segment.ArrayElement(i) :: tail, CursorOp.MoveRight) => Segment.ArrayElement(i + 1) :: tail
-          case (acc, CursorOp.MoveRight)                             => Segment.ArrayElement(1) :: acc
-          case (acc, c) =>
-            println(s"Got a $c when I had a $acc")
-            Segment.Attribute(c.toString) :: acc
-        }
+        mapAtomicError(msg),
+        path
+          .foldLeft(List.empty[Segment]) {
+            case (acc, CursorOp.DownField(field))                      => Segment.Attribute(field) :: acc
+            case (Segment.ArrayElement(i) :: tail, CursorOp.DownArray) => Segment.ArrayElement(i) :: tail
+            case (acc, CursorOp.DownArray)                             => Segment.ArrayElement(0) :: acc
+            case (Segment.ArrayElement(i) :: tail, CursorOp.MoveRight) => Segment.ArrayElement(i + 1) :: tail
+            case (acc, CursorOp.MoveRight)                             => Segment.ArrayElement(1) :: acc
+            case (acc, c) =>
+              println(s"Got a $c when I had a $acc")
+              Segment.Attribute(c.toString) :: acc
+          }
       )
-    case error => ReadError(NativeReadError(error), List.empty)
+    case error => ReadError.NativeReadError(error.getMessage, error)
   }
 }
 
 object CirceStringEngine extends CirceEngine[String] {
 
   override def readNative[A: NR](input: String): Either[ReadError, A] =
-    parser.decode[A](input).leftMap(CirceEngine.mapReadErrors)
+    parser.decodeAccumulating[A](input).leftMap(CirceEngine.mapReadErrors).toEither
 }
 
 object CirceJsonEngine extends CirceEngine[Json] {
-  override def readNative[A: NR](input: Json): Either[ReadError, A] = input.as[A].leftMap(CirceEngine.mapReadErrors)
+  override def readNative[A: NR](input: Json): Either[ReadError, A] = input.as[A].leftMap(CirceEngine.mapReadError)
 
 }

@@ -34,6 +34,7 @@ lazy val rosettaCirce = project.module
   .settings(
     libraryDependencies ++= Seq(
       catsCore,
+      catsKernel,
       Ghik.silencerLib
     ) ++ circeLibraries
   )

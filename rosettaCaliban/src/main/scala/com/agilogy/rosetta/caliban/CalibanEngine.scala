@@ -9,7 +9,6 @@ import caliban.schema.{ ArgBuilder, GenericSchema, Schema, Step }
 import caliban.{ schema, CalibanError, InputValue }
 
 import com.agilogy.rosetta.engine.Engine
-import com.agilogy.rosetta.read.ReadErrorCause.NativeReadError
 import com.agilogy.rosetta.read.{ NativeRead, ReadError, Segment }
 import com.agilogy.rosetta.write.NativeWrite
 
@@ -41,7 +40,10 @@ object CalibanEngine extends Engine[ArgBuilder, InputValue, ExecutionError, Sche
   override def readNative[A: ArgBuilder](input: InputValue): Either[ReadError, A] =
     implicitly[ArgBuilder[A]]
       .build(input)
-      .leftMap(error => ReadError(NativeReadError(error), error.fieldName.map(Segment.Attribute).toList))
+      .leftMap(
+        error =>
+          ReadError(ReadError.NativeReadError(error.getMessage, error), error.fieldName.map(Segment.Attribute).toList)
+      )
 
   override def listNativeRead[A: ArgBuilder]: ArgBuilder[List[A]] = ArgBuilder.list[A]
 
