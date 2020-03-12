@@ -1,34 +1,58 @@
 package com.agilogy.rosetta.read
 
 import cats.Semigroup
+import cats.data.NonEmptyList
 import cats.implicits._
+
+import com.agilogy.rosetta.read.ReadError.{ AtomicReadError, ParseError, ReadErrors, WrongTypeReadError }
 
 sealed trait Segment extends Product with Serializable
 object Segment {
+  def apply(attribute: String): Segment = Attribute(attribute)
   final case class Attribute(name: String) extends Segment {
     override def toString: String = name
   }
+  def apply(position: Int): Segment = ArrayElement(position)
   final case class ArrayElement(position: Int) extends Segment {
     override def toString: String = position.toString
   }
 }
 
-sealed trait ReadError extends Exception
+sealed trait ReadError extends Exception {
+  def at(attribute: String): ReadError = at(Segment.Attribute(attribute))
+  def at(path: Segment*): ReadError = NonEmptyList.fromList(path.toList).fold[ReadError](this) { p =>
+    this match {
+      case a: AtomicReadError     => ReadErrors(NonEmptyList.of(p -> a))
+      case ReadErrors(errors)     => ReadErrors(errors.map(_.leftMap(p ::: _)))
+      case parseError: ParseError => parseError
+    }
+  }
+
+  def ++(other: ReadError): ReadError = (this, other) match {
+    case (ReadErrors(errs1), ReadErrors(errs2))        => ReadErrors(errs1 ::: errs2)
+    case (WrongTypeReadError("Object"), ReadErrors(_)) => WrongTypeReadError("Object")
+    case (ReadErrors(_), WrongTypeReadError("Object")) => WrongTypeReadError("Object")
+    case _                                             => this
+  }
+
+}
 
 object ReadError {
 
   final case class ParseError(message: String, underlying: Throwable) extends ReadError
 
-  def ofRecord(errors: (String, ReadError)*): ReadError =
-    RecordReadError(errors.map(_.leftMap(Segment.Attribute)).toMap)
-  final case class RecordReadError(errors: Map[Segment.Attribute, ReadError]) extends ReadError {
-    override def getMessage: String = s"Error reading record: ${errors.mkString(",")}"
+  sealed abstract case class ReadErrors(errors: NonEmptyList[(NonEmptyList[Segment], AtomicReadError)])
+      extends ReadError {
+    override def getMessage: String = s"Error reading record: ${errors.toList.mkString(",")}"
+
+    private def pathToString(path: NonEmptyList[Segment]) = path.toList.mkString("/")
+    override def toString: String =
+      s"ReadErrors(${errors.map { case (path, error) => s"${pathToString(path)} -> $error" }})"
   }
 
-  def ofArray(errors: (Int, ReadError)*): ReadError =
-    ArrayReadError(errors.map(_.leftMap(Segment.ArrayElement)).toMap)
-  final case class ArrayReadError(errors: Map[Segment.ArrayElement, ReadError]) extends ReadError {
-    override def getMessage: String = s"Error reading array: ${errors.mkString(",")}"
+  object ReadErrors {
+    def apply(errors: NonEmptyList[(NonEmptyList[Segment], AtomicReadError)]): ReadErrors =
+      new ReadErrors(NonEmptyList.fromListUnsafe(errors.toList.distinct)) {}
   }
 
   sealed trait AtomicReadError extends ReadError {
@@ -36,7 +60,7 @@ object ReadError {
     override def getMessage: String = message
   }
 
-  def wrongType(expectedType: String): ReadError = WrongTypeReadError(expectedType)
+  def wrongType(expectedType: String): AtomicReadError = WrongTypeReadError(expectedType)
   final case class WrongTypeReadError(message: String) extends AtomicReadError
   final case class NativeReadError[E](message: String, error: E) extends AtomicReadError {
     override def getMessage: String = s"$message ($error)"
@@ -45,22 +69,7 @@ object ReadError {
     override def message: String = s"Attribute is required but missing"
   }
 
-  def apply(error: ReadError, segments: List[Segment]): ReadError = segments.reverse.foldLeft(error) {
-    case (acc, segment) => apply(acc, segment)
-  }
-
-  def apply(error: ReadError, segment: Segment): ReadError = segment match {
-    case attributeSegment @ Segment.Attribute(_) => RecordReadError(Map(attributeSegment -> error))
-    case arraySegment @ Segment.ArrayElement(_)  => ArrayReadError(Map(arraySegment      -> error))
-  }
-
   implicit val readErrorSemigroup: Semigroup[ReadError] = new Semigroup[ReadError] {
-    override def combine(x: ReadError, y: ReadError): ReadError = (x, y) match {
-      case (RecordReadError(errs1), RecordReadError(errs2))   => RecordReadError(catsSyntaxSemigroup(errs1) |+| errs2)
-      case (ArrayReadError(errs1), ArrayReadError(errs2))     => ArrayReadError(catsSyntaxSemigroup(errs1) |+| errs2)
-      case (WrongTypeReadError("Object"), RecordReadError(_)) => WrongTypeReadError("Object")
-      case (RecordReadError(_), WrongTypeReadError("Object")) => WrongTypeReadError("Object")
-      case _                                                  => x
-    }
+    override def combine(x: ReadError, y: ReadError): ReadError = x ++ y
   }
 }
