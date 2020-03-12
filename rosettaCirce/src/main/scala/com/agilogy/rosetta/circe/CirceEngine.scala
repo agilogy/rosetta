@@ -5,6 +5,7 @@ import cats.implicits._
 
 import com.github.ghik.silencer.silent
 import io.circe.{ parser, CursorOp, Decoder, DecodingFailure, Encoder, Error, Json, ParsingFailure }
+
 import com.agilogy.rosetta.engine.Engine
 import com.agilogy.rosetta.read.ReadError.AtomicReadError
 import com.agilogy.rosetta.read.{ NativeRead, ReadError, Segment }
