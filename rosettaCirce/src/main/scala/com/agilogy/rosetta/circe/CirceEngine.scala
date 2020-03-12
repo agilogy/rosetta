@@ -4,8 +4,7 @@ import cats.data.NonEmptyList
 import cats.implicits._
 
 import com.github.ghik.silencer.silent
-import io.circe.{ parser, CursorOp, Decoder, DecodingFailure, Encoder, Error, Json }
-
+import io.circe.{ parser, CursorOp, Decoder, DecodingFailure, Encoder, Error, Json, ParsingFailure }
 import com.agilogy.rosetta.engine.Engine
 import com.agilogy.rosetta.read.ReadError.AtomicReadError
 import com.agilogy.rosetta.read.{ NativeRead, ReadError, Segment }
@@ -66,31 +65,38 @@ object CirceEngine {
   def mapReadErrors(errors: NonEmptyList[Error]): ReadError = errors.map(mapReadError).reduce
 
   private def mapAtomicError(message: String): AtomicReadError = message match {
-    case "C[A]" => ReadError.SimpleMessageReadError("Array expected")
-    case _      => ReadError.SimpleMessageReadError(s"$message expected")
+    case "C[A]" => ReadError.WrongTypeReadError("Array")
+    case _      => ReadError.WrongTypeReadError(message)
   }
 
-  @silent("automatic toString")
-  @silent("Recursion")
+  // Used the implementation of opsToPath from Circe as an inspiration
+  @silent("ToString")
+  private def cursorOpsToSegments(history: List[CursorOp]): List[Segment] =
+    history
+      .foldRight(List.empty[Segment]) {
+        case (CursorOp.DownField(k), acc)                          => Segment.Attribute(k) :: acc
+        case (CursorOp.DownArray, acc)                             => Segment.ArrayElement(0) :: acc
+        case (CursorOp.MoveUp, _ :: tail)                          => tail
+        case (CursorOp.MoveRight, Segment.ArrayElement(i) :: tail) => Segment.ArrayElement(i + 1) :: tail
+        case (CursorOp.MoveLeft, Segment.ArrayElement(i) :: tail)  => Segment.ArrayElement(i - 1) :: tail
+        case (CursorOp.RightN(n), Segment.ArrayElement(i) :: tail) => Segment.ArrayElement(i + n) :: tail
+        case (CursorOp.LeftN(n), Segment.ArrayElement(i) :: tail)  => Segment.ArrayElement(i - n) :: tail
+        case (op, acc) =>
+          println(s"Got a $op when I had a $acc")
+          Segment.Attribute(op.toString) :: acc
+      }
+      .reverse
+
   def mapReadError(e: Error): ReadError = e match {
-    case DecodingFailure("Attempt to decode value on failed cursor", _ :: tail) =>
-      mapReadError(DecodingFailure("Object", tail))
+    case DecodingFailure("Attempt to decode value on failed cursor", CursorOp.DownArray :: historyTail) =>
+      ReadError(ReadError.wrongType("Array"), cursorOpsToSegments(historyTail))
+    case DecodingFailure("Attempt to decode value on failed cursor", path @ CursorOp.DownField(_) :: _) =>
+      ReadError(ReadError.MissingAttributeError, cursorOpsToSegments(path))
+    case DecodingFailure("[A]Option[A]", CursorOp.DownField(_) :: parent) =>
+      ReadError(ReadError.wrongType("Object"), cursorOpsToSegments(parent))
     case DecodingFailure(msg, path) =>
-      ReadError(
-        mapAtomicError(msg),
-        path
-          .foldLeft(List.empty[Segment]) {
-            case (acc, CursorOp.DownField(field))                      => Segment.Attribute(field) :: acc
-            case (Segment.ArrayElement(i) :: tail, CursorOp.DownArray) => Segment.ArrayElement(i) :: tail
-            case (acc, CursorOp.DownArray)                             => Segment.ArrayElement(0) :: acc
-            case (Segment.ArrayElement(i) :: tail, CursorOp.MoveRight) => Segment.ArrayElement(i + 1) :: tail
-            case (acc, CursorOp.MoveRight)                             => Segment.ArrayElement(1) :: acc
-            case (acc, c) =>
-              println(s"Got a $c when I had a $acc")
-              Segment.Attribute(c.toString) :: acc
-          }
-      )
-    case error => ReadError.NativeReadError(error.getMessage, error)
+      ReadError(mapAtomicError(msg), cursorOpsToSegments(path))
+    case ParsingFailure(message, underlying) => ReadError.ParseError(message, underlying)
   }
 }
 

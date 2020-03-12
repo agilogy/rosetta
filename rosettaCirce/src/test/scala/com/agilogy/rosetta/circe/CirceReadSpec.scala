@@ -15,7 +15,7 @@ abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fo
   }
 
   test("fail to read a primitive of the wrong type as a wrapper class") {
-    assertEquals(read[Age]("false"), ReadError("Int expected").asLeft[Age])
+    assertEquals(read[Age]("false"), ReadError.wrongType("Int").asLeft[Age])
   }
 
   test("read an object") {
@@ -25,28 +25,30 @@ abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fo
     )
   }
 
-  val wrongPerson = """{"name":false,"age":"young","favoriteColors":3}"""
+  val wrongPerson = """{"age":"young","favoriteColors":3}"""
   val wrongPersonErrors: ReadError = ReadError.ofRecord(
-    "name"           -> ReadError.SimpleMessageReadError("String expected"),
-    "age"            -> ReadError.SimpleMessageReadError("Int expected"),
-    "favoriteColors" -> ReadError.SimpleMessageReadError("Array expected")
+    "name"           -> ReadError.MissingAttributeError,
+    "age"            -> ReadError.WrongTypeReadError("Int"),
+    "favoriteColors" -> ReadError.WrongTypeReadError("Array")
   )
 
   test("fail to read an object and accumulate errors") {
     assertEquals(read[Person](wrongPerson), wrongPersonErrors.asLeft[Person])
   }
 
-  test("fail to read an object when it is not one") {
+  test("fail to read an object when it is not one".only) {
     assertEquals(
       read[Foo]("""{"dept":{"name":"a","head": 1}}"""),
-      ReadError.ofRecord("dept" -> ReadError.ofRecord("head" -> ReadError.atomic("Object expected"))).asLeft[Foo]
+      ReadError
+        .ofRecord("dept" -> ReadError.ofRecord("head" -> ReadError.wrongType("Object")))
+        .asLeft[Foo]
     )
   }
 
   test("fail to read an optional attribute when it is wrong") {
     assertEquals(
       read[Person]("""{"name":"John", "age":"young"}"""),
-      ReadError.ofRecord("age" -> ReadError.atomic("Int expected")).asLeft[Person]
+      ReadError.ofRecord("age" -> ReadError.wrongType("Int")).asLeft[Person]
     )
 
   }
@@ -77,7 +79,7 @@ abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fo
       read[Person]("""{"name":"Mary", "favoriteColors":[false, "blue", 3]}"""),
       ReadError
         .ofRecord(
-          "favoriteColors" -> ReadError.ofArray(0 -> ReadError("String expected"), 2 -> ReadError("String expected"))
+          "favoriteColors" -> ReadError.ofArray(0 -> ReadError.wrongType("String"), 2 -> ReadError.wrongType("String"))
         )
         .asLeft[Person]
     )
