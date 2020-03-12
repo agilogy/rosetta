@@ -5,7 +5,7 @@ import cats.implicits._
 import com.github.ghik.silencer.silent
 
 import com.agilogy.rosetta.circe.CirceStringEngine.{ read, R }
-import com.agilogy.rosetta.read.ReadError
+import com.agilogy.rosetta.read.{ ReadError, Segment }
 
 @silent("ImplicitParameter")
 abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fooRead: R[Foo]) extends munit.FunSuite {
@@ -15,7 +15,7 @@ abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fo
   }
 
   test("fail to read a primitive of the wrong type as a wrapper class") {
-    assertEquals(read[Age]("false"), ReadError.wrongType("Int").asLeft[Age])
+    assertEquals(read[Age]("false"), (ReadError.wrongType("Int"): ReadError).asLeft[Age])
   }
 
   test("read an object") {
@@ -26,11 +26,10 @@ abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fo
   }
 
   val wrongPerson = """{"age":"young","favoriteColors":3}"""
-  val wrongPersonErrors: ReadError = ReadError.ofRecord(
-    "name"           -> ReadError.MissingAttributeError,
-    "age"            -> ReadError.WrongTypeReadError("Int"),
-    "favoriteColors" -> ReadError.WrongTypeReadError("Array")
-  )
+  val wrongPersonErrors: ReadError =
+    ReadError.MissingAttributeError.at("name") ++
+      ReadError.WrongTypeReadError("Int").at("age") ++
+      ReadError.WrongTypeReadError("Array").at("favoriteColors")
 
   test("fail to read an object and accumulate errors") {
     assertEquals(read[Person](wrongPerson), wrongPersonErrors.asLeft[Person])
@@ -39,8 +38,8 @@ abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fo
   test("fail to read an object when it is not one".only) {
     assertEquals(
       read[Foo]("""{"dept":{"name":"a","head": 1}}"""),
-      ReadError
-        .ofRecord("dept" -> ReadError.ofRecord("head" -> ReadError.wrongType("Object")))
+      (ReadError.MissingAttributeError.at(Segment("dept"), Segment("head"), Segment("name")) ++
+        ReadError.wrongType("Object").at(Segment("dept"), Segment("head")))
         .asLeft[Foo]
     )
   }
@@ -48,7 +47,7 @@ abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fo
   test("fail to read an optional attribute when it is wrong") {
     assertEquals(
       read[Person]("""{"name":"John", "age":"young"}"""),
-      ReadError.ofRecord("age" -> ReadError.wrongType("Int")).asLeft[Person]
+      ReadError.wrongType("Int").at("age").asLeft[Person]
     )
 
   }
@@ -56,7 +55,7 @@ abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fo
   test("fail to read a wrong object inside an object and accumulate errors") {
     assertEquals(
       read[Foo](s"""{"dept":{"name": "Foo", "head":$wrongPerson}}"""),
-      ReadError.ofRecord("dept" -> ReadError.ofRecord("head" -> wrongPersonErrors)).asLeft[Foo]
+      wrongPersonErrors.at(Segment("dept"), Segment("head")).asLeft[Foo]
     )
   }
 
@@ -77,11 +76,8 @@ abstract class CirceReadSpec(implicit ageRead: R[Age], personRead: R[Person], fo
   test("handle errors when reading an array") {
     assertEquals(
       read[Person]("""{"name":"Mary", "favoriteColors":[false, "blue", 3]}"""),
-      ReadError
-        .ofRecord(
-          "favoriteColors" -> ReadError.ofArray(0 -> ReadError.wrongType("String"), 2 -> ReadError.wrongType("String"))
-        )
-        .asLeft[Person]
+      (ReadError.wrongType("String").at(Segment("favoriteColors"), Segment(0)) ++
+        ReadError.wrongType("String").at(Segment(2))).asLeft[Person]
     )
   }
 

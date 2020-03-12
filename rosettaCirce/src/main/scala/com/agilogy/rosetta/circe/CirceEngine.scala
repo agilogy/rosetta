@@ -90,14 +90,15 @@ object CirceEngine {
 
   def mapReadError(e: Error): ReadError = e match {
     case DecodingFailure("Attempt to decode value on failed cursor", CursorOp.DownArray :: historyTail) =>
-      ReadError(ReadError.wrongType("Array"), cursorOpsToSegments(historyTail))
+      ReadError.wrongType("Array").at(cursorOpsToSegments(historyTail): _*)
     case DecodingFailure("Attempt to decode value on failed cursor", path @ CursorOp.DownField(_) :: _) =>
-      ReadError(ReadError.MissingAttributeError, cursorOpsToSegments(path))
+      ReadError.MissingAttributeError.at(cursorOpsToSegments(path): _*)
     case DecodingFailure("[A]Option[A]", CursorOp.DownField(_) :: parent) =>
-      ReadError(ReadError.wrongType("Object"), cursorOpsToSegments(parent))
+      ReadError.wrongType("Object").at(cursorOpsToSegments(parent): _*)
     case DecodingFailure(msg, path) =>
-      ReadError(mapAtomicError(msg), cursorOpsToSegments(path))
-    case ParsingFailure(message, underlying) => ReadError.ParseError(message, underlying)
+      mapAtomicError(msg).at(cursorOpsToSegments(path): _*)
+    case ParsingFailure(message, underlying) =>
+      ReadError.ParseError(message, underlying)
   }
 }
 

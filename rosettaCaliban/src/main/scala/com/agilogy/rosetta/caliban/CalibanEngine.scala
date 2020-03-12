@@ -42,7 +42,7 @@ object CalibanEngine extends Engine[ArgBuilder, InputValue, ExecutionError, Sche
       .build(input)
       .leftMap(
         error =>
-          ReadError(ReadError.NativeReadError(error.getMessage, error), error.fieldName.map(Segment.Attribute).toList)
+          ReadError.NativeReadError(error.getMessage, error).at(error.fieldName.map(Segment.Attribute).toList: _*)
       )
 
   override def listNativeRead[A: ArgBuilder]: ArgBuilder[List[A]] = ArgBuilder.list[A]
