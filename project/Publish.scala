@@ -5,7 +5,7 @@ import sbt.Keys.licenses
 object Publish {
   lazy val publishSettings = Seq(
     bintrayRepository := "scala",
-    bintrayReleaseOnPublish in ThisBuild := false,
+    bintrayReleaseOnPublish in ThisBuild := true,
     bintrayOrganization := Some("agilogy"),
     bintrayPackageLabels := Seq("scala"),
     licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html"))
