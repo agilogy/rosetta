@@ -3,7 +3,7 @@ import Dependencies._
 
 globalSettings
 
-def commonSettings = Seq(version := "0.6")
+def commonSettings = Seq(version := "0.7")
 
 lazy val root = project
   .in(file("."))
