@@ -4,7 +4,9 @@ import scala.reflect.ClassTag
 
 import cats.implicits._
 
-sealed trait Schema
+sealed trait Schema {
+  def name: String
+}
 
 sealed trait AttributeRequirement
 object AttributeRequirement {
@@ -17,8 +19,10 @@ object Schema {
   final case class AttributeSchema(name: String, attributeType: Schema, required: AttributeRequirement)
   final case class RecordSchema(name: String, attributes: List[AttributeSchema]) extends Schema
   def record(name: String, attributes: AttributeSchema*): Schema = RecordSchema(name, attributes.toList)
-  final case class ListSchema(elementsSchema: Schema) extends Schema
-  final case class AtomSchema(name: String)           extends Schema
+  final case class ListSchema(elementsSchema: Schema) extends Schema {
+    override def name: String = s"List[${elementsSchema.name}]"
+  }
+  final case class AtomSchema(name: String) extends Schema
 
   def fromClass[A: ClassTag]: AtomSchema = {
     val classTagToString = implicitly[ClassTag[A]].toString()
