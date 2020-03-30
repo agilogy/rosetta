@@ -1,0 +1,75 @@
+package com.agilogy.rosetta.meta
+
+sealed trait Meta[A]
+
+object Meta {
+
+  def apply[A](implicit meta: Meta[A]): Meta[A] = meta
+
+  sealed trait Atom[A] extends Meta[A]
+  final case class SimpleAtom[A](name: String) extends Atom[A] {
+    def iAndThen[B](name: String)(f: A => Either[Throwable, B])(g: B => A): MappedAtom[A, B] =
+      MappedAtom(name, this)(f)(g)
+    def imap[E, B](name: String)(f: A => B)(g: B => A): MappedAtom[A, B] =
+      iAndThen(name)(x => Right(f(x)))(g)
+  }
+
+  implicit val string: SimpleAtom[String]   = SimpleAtom[String]("string")
+  implicit val int: SimpleAtom[Int]         = SimpleAtom[Int]("int")
+  implicit val boolean: SimpleAtom[Boolean] = SimpleAtom[Boolean]("boolean")
+
+  final case class MappedAtom[A, B](name: String, meta: Atom[A])(val f: A => Either[Throwable, B])(val g: B => A)
+    extends Atom[B] {
+    def iAndThen[C](f2: B => Either[Throwable, C])(g2: C => B): MappedAtom[A, C] =
+      MappedAtom(name, meta)(f(_).flatMap(f2))(g2 andThen g)
+    def iAndThen[C](name: String)(f2: B => Either[Throwable, C])(g2: C => B): MappedAtom[A, C] =
+      MappedAtom(name, meta)(f(_).flatMap(f2))(g2 andThen g)
+  }
+
+  final case class Option[A](meta: Meta[A]) extends Meta[scala.Option[A]]
+  implicit def option[A: Meta]: Option[A] = Option(Meta[A])
+
+  final case class List[L[_], A](elementsMeta: Meta[A]) extends Meta[L[A]]
+  implicit def list[A: Meta]: List[scala.List, A] = List(Meta[A])
+
+  sealed trait Record[A] extends Meta[A] {
+    def name: String
+  }
+
+  sealed trait Attribute[A] {
+    def name: String
+    def meta: Meta[A]
+  }
+
+  object Attribute {
+    def apply[A: Meta](name: String): Mandatory[A]                  = Mandatory[A](name)
+    def apply[A: Meta](name: String, defaultsTo: A): WithDefault[A] = WithDefault[A](name, defaultsTo)
+    final case class Mandatory[A: Meta](val name: String) extends Attribute[A] {
+      def defaultTo(value: A): WithDefault[A] = WithDefault(name, value)
+      override val meta: Meta[A]              = Meta[A]
+    }
+    final case class WithDefault[A: Meta](name: String, defaultValue: A) extends Attribute[A] {
+      override val meta: Meta[A] = Meta[A]
+    }
+  }
+
+
+
+  final case class Record1[A0, A](name: String, attribute0: Attribute[A0])(val build: A0 => A)(
+    val get: A => A0
+  ) extends Record[A]
+
+  [2..22#final case class Record1[[#A0#], A](
+     name: String,
+    [#attribute0: Attribute[A0]#]
+   )(
+     val build: ([#A0#]) => A
+   )(val get: A => ([#A0#]))
+    extends Record[A]#
+
+  ]
+
+
+
+
+}

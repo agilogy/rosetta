@@ -10,3 +10,4 @@ addSbtPlugin("ch.epfl.scala"                     % "sbt-bloop"                 %
 addSbtPlugin("com.dwijnand"                      % "sbt-dynver"                % "4.0.0")
 addSbtPlugin("ch.epfl.scala"                     % "sbt-scalafix"              % "0.9.11")
 addSbtPlugin("org.wartremover"                   % "sbt-wartremover"           % "2.4.3")
+addSbtPlugin("io.spray"                          % "sbt-boilerplate"           % "0.6.1")
