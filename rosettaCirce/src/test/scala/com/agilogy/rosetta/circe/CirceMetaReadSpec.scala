@@ -2,12 +2,10 @@ package com.agilogy.rosetta.circe
 
 import cats.implicits._
 
+import com.agilogy.rosetta.circe.CirceEngine.decode
 import com.agilogy.rosetta.circe.CirceMetaProtocol._
 import com.agilogy.rosetta.circe.PersonMeta._
 import com.agilogy.rosetta.read.{ ReadError, Segment }
-import io.circe.Decoder
-import io.circe.parser.decodeAccumulating
-import CirceEngine.decode
 
 final class CirceMetaReadSpec extends munit.FunSuite {
 
@@ -101,7 +99,7 @@ final class CirceMetaReadSpec extends munit.FunSuite {
     assertEquals(
       res,
       (ReadError.wrongType("String").at(Segment("favoriteColors"), Segment(0)) ++
-        ReadError.wrongType("String").at(Segment(2))).asLeft[Person]
+        ReadError.wrongType("String").at(Segment("favoriteColors"), Segment(2))).asLeft[Person]
     )
   }
 

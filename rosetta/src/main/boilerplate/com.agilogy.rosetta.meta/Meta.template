@@ -1,5 +1,8 @@
 package com.agilogy.rosetta.meta
 
+import scala.collection.mutable
+import scala.collection.generic.CanBuildFrom
+
 sealed trait Meta[A]
 
 object Meta {
@@ -7,18 +10,24 @@ object Meta {
   def apply[A](implicit meta: Meta[A]): Meta[A] = meta
 
   sealed trait Atom[A] extends Meta[A]
-  final case class SimpleAtom[A](name: String) extends Atom[A] {
+  sealed abstract class SimpleAtom[A](val name: String) extends Atom[A] {
     def iAndThen[B](name: String)(f: A => Either[Throwable, B])(g: B => A): MappedAtom[A, B] =
       MappedAtom(name, this)(f)(g)
     def imap[E, B](name: String)(f: A => B)(g: B => A): MappedAtom[A, B] =
       iAndThen(name)(x => Right(f(x)))(g)
   }
 
-  implicit val string: SimpleAtom[String]   = SimpleAtom[String]("string")
-  implicit val int: SimpleAtom[Int]         = SimpleAtom[Int]("int")
-  implicit val boolean: SimpleAtom[Boolean] = SimpleAtom[Boolean]("boolean")
+  implicit object boolean extends SimpleAtom[Boolean]("boolean")
+  implicit object string extends SimpleAtom[String]("string")
+  implicit object char extends SimpleAtom[Char]("char")
+  implicit object int extends SimpleAtom[Int]("int")
+  implicit object long extends SimpleAtom[Long]("long")
+  implicit object integer extends SimpleAtom[BigInt]("integer")
+  implicit object float extends SimpleAtom[Float]("float")
+  implicit object double extends SimpleAtom[Double]("double")
+  implicit object decimal extends SimpleAtom[BigDecimal]("decimal")
 
-  final case class MappedAtom[A, B](name: String, meta: Atom[A])(val f: A => Either[Throwable, B])(val g: B => A)
+  final case class MappedAtom[A, B](name: String, meta: SimpleAtom[A])(val f: A => Either[Throwable, B])(val g: B => A)
     extends Atom[B] {
     def iAndThen[C](f2: B => Either[Throwable, C])(g2: C => B): MappedAtom[A, C] =
       MappedAtom(name, meta)(f(_).flatMap(f2))(g2 andThen g)
@@ -29,8 +38,8 @@ object Meta {
   final case class Option[A](meta: Meta[A]) extends Meta[scala.Option[A]]
   implicit def option[A: Meta]: Option[A] = Option(Meta[A])
 
-  final case class List[L[_], A](elementsMeta: Meta[A]) extends Meta[L[A]]
-  implicit def list[A: Meta]: List[scala.List, A] = List(Meta[A])
+  final case class List[L[_], A](elementsMeta: Meta[A], asIterable: L[A] => Iterable[A], builder: mutable.Builder[A, L[A]]) extends Meta[L[A]]
+  implicit def list[L[_],A: Meta](implicit cbf: CanBuildFrom[Nothing, A, L[A]], asIterable: L[A] => Iterable[A]): List[L, A] = List[L, A](Meta[A], asIterable, cbf())
 
   sealed trait Record[A] extends Meta[A] {
     def name: String
@@ -69,7 +78,20 @@ object Meta {
 
   ]
 
+  sealed trait Union[A] extends Meta[A]{
+    def name:String
+    def options: scala.List[Record[_ <: A]]
+  }
 
 
+  [2..10#final case class Union1[A, [#A0<:A#]](name: String)(
+    [#val cast0: A => scala.Option[A0]#]
+  )(
+    implicit [#val option0: Meta.Record[A0]#]
+  ) extends Union[A] {
+    override def options: scala.List[Record[_ <: A]] = scala.List([#option0#])
+  }#
+
+  ]
 
 }

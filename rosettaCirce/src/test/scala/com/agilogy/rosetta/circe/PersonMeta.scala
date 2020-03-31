@@ -20,4 +20,8 @@ object PersonMeta {
     Meta.Record2("department", "name".mandatory[String], "head".mandatory[Person])(Department)(d => (d.name, d.head))
   implicit val fooMeta: Meta.Record1[Department, Foo] = Meta.Record1("foo", "dept".mandatory[Department])(Foo)(_.dept)
 
+  implicit class CastOps[A, B](self: A => Option[Any]) extends (A => Option[A]) {
+    override def apply(v1: A): Option[A] = self(v1).map(_ => v1)
+  }
+
 }

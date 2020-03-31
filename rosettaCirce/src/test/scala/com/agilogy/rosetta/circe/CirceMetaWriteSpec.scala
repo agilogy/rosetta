@@ -10,7 +10,7 @@ final case class SimpleExample(a: Int, b: String)
 
 final class CirceMetaWriteSpec extends munit.FunSuite {
 
-  implicit val simpleExampleMeta: Meta.Record2[Int, String, SimpleExample] =
+  implicit val simpleExampleMeta: Meta[SimpleExample] =
     Meta.Record2("simple", "a".mandatory[Int], "b".mandatory[String])(SimpleExample)(s => (s.a, s.b))
 
   def write[A: Encoder](value: A): String = Encoder[A].apply(value).noSpaces
