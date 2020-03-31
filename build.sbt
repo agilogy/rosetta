@@ -3,31 +3,25 @@ import Dependencies._
 
 globalSettings
 
-def commonSettings = Seq(version := "0.7")
+def commonSettings = Seq(version := "0.8-M3")
 
 lazy val root = project
   .in(file("."))
   .settings(welcomeMessage)
-  .aggregate(rosetta, rosettaCaliban, rosettaCirce)
+  .aggregate(rosetta, rosettaCirce)
   .settings(skip in publish := true)
 
 lazy val rosetta = project.module
   .settings(
     libraryDependencies ++= Seq(
       catsKernel,
-      catsCore
+      catsCore,
+      Ghik.silencerLib
     )
   )
   .settings(commonSettings)
   .settings(Publish.publishSettings)
-
-lazy val rosettaCaliban = project.module
-  .dependsOn(rosetta)
-  .settings(
-    libraryDependencies ++= Seq(catsCore, caliban)
-  )
-  .settings(commonSettings)
-  .settings(Publish.publishSettings)
+  .enablePlugins(spray.boilerplate.BoilerplatePlugin)
 
 lazy val rosettaCirce = project.module
   .dependsOn(rosetta)
@@ -41,3 +35,4 @@ lazy val rosettaCirce = project.module
   .settings(commonSettings)
   .settings(munitTestSettings)
   .settings(Publish.publishSettings)
+  .enablePlugins(spray.boilerplate.BoilerplatePlugin)

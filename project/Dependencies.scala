@@ -4,11 +4,12 @@ import sbt.Keys.{ libraryDependencies, testFrameworks }
 trait Circe {
 
   private val org          = "io.circe"
-  private val circeVersion = "0.12.3"
+  private val circeVersion = "0.13.0"
 
-  val circeCore    = org %% "circe-core"    % circeVersion
-  val circeGeneric = org %% "circe-generic" % circeVersion
-  val circeParser  = org %% "circe-parser"  % circeVersion
+  val circeCore          = org %% "circe-core"           % circeVersion
+  val circeGeneric       = org %% "circe-generic"        % circeVersion
+  val circeGenericExtras = org %% "circe-generic-extras" % circeVersion
+  val circeParser        = org %% "circe-parser"         % circeVersion
 
   val circeLibraries = Seq(circeCore, circeParser)
 }
@@ -43,7 +44,7 @@ trait Ghostdogpr {
 trait Typelevel {
 
   private val org         = "org.typelevel"
-  private val catsVersion = "2.0.0"
+  private val catsVersion = "2.1.0"
 
   val catsKernel    = org %% "cats-kernel"    % catsVersion
   val catsCore      = org %% "cats-core"      % catsVersion
