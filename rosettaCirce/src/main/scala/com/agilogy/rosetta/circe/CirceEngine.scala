@@ -2,11 +2,12 @@ package com.agilogy.rosetta.circe
 
 import cats.data.NonEmptyList
 
-import com.agilogy.rosetta.read.{ ReadError, Segment }
-import com.agilogy.rosetta.read.ReadError.AtomicReadError
 import com.github.ghik.silencer.silent
-import io.circe.{ CursorOp, Decoder, DecodingFailure, Encoder, Error, Json, ParsingFailure }
 import io.circe.parser.decodeAccumulating
+import io.circe.{ CursorOp, Decoder, DecodingFailure, Encoder, Error, Json, ParsingFailure }
+
+import com.agilogy.rosetta.read.ReadError.AtomicReadError
+import com.agilogy.rosetta.read.{ ReadError, Segment }
 
 object CirceEngine {
 

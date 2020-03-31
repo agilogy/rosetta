@@ -4,9 +4,10 @@ import scala.collection.mutable
 
 import cats.implicits._
 
-import com.agilogy.rosetta.meta.Meta
 import com.github.ghik.silencer.silent
 import io.circe.{ BuilderDecoder, Decoder, DecodingFailure, Encoder }
+
+import com.agilogy.rosetta.meta.Meta
 
 object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecoders {
 
@@ -108,7 +109,7 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
       case Some(discriminatorReader) =>
         discriminatorReader.flatMap { discriminator =>
           meta.options
-            .find(_.name == discriminator)
+            .find(_.name === discriminator)
             .fold(Decoder.failed[A](DecodingFailure(s"Discriminator value $discriminator is invalid", List.empty)))(
               recordMetaCirceDecoder(_).widen[A]
             )

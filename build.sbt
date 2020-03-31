@@ -15,7 +15,8 @@ lazy val rosetta = project.module
   .settings(
     libraryDependencies ++= Seq(
       catsKernel,
-      catsCore
+      catsCore,
+      Ghik.silencerLib
     )
   )
   .settings(commonSettings)

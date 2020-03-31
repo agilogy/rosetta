@@ -1,8 +1,9 @@
 package com.agilogy.rosetta.circe
 
-import io.circe.Encoder
-import PersonMeta._
 import CirceMetaProtocol._
+import PersonMeta._
+import io.circe.Encoder
+
 import com.agilogy.rosetta.meta.Meta
 import com.agilogy.rosetta.meta.syntax._
 

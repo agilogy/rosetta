@@ -11,7 +11,7 @@ trait Circe {
   val circeGenericExtras = org %% "circe-generic-extras" % circeVersion
   val circeParser        = org %% "circe-parser"         % circeVersion
 
-  val circeLibraries = Seq(circeCore, circeParser, circeGeneric, circeGenericExtras)
+  val circeLibraries = Seq(circeCore, circeParser)
 }
 
 trait Ghik {
@@ -44,7 +44,7 @@ trait Ghostdogpr {
 trait Typelevel {
 
   private val org         = "org.typelevel"
-  private val catsVersion = "2.0.0"
+  private val catsVersion = "2.1.0"
 
   val catsKernel    = org %% "cats-kernel"    % catsVersion
   val catsCore      = org %% "cats-core"      % catsVersion
