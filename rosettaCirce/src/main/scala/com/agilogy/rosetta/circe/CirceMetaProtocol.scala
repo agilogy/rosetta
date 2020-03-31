@@ -41,6 +41,7 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
   @silent("AsInstanceOf")
   def simpleAtomMetaCirceEncoder[A](implicit meta: Meta.SimpleAtom[A]): Encoder[A] =
     (meta match {
+      case Meta.unit    => Encoder.encodeUnit
       case Meta.boolean => Encoder.encodeBoolean
       case Meta.string  => Encoder.encodeString
       case Meta.char    => Encoder.encodeChar
@@ -55,6 +56,7 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
   @silent("AsInstanceOf")
   def simpleAtomMetaCirceDecoder[A](implicit meta: Meta.SimpleAtom[A]): Decoder[A] =
     (meta match {
+      case Meta.unit    => Decoder.decodeUnit
       case Meta.boolean => Decoder.decodeBoolean
       case Meta.string  => Decoder.decodeString
       case Meta.char    => Decoder.decodeChar

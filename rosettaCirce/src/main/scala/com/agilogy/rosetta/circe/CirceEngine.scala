@@ -5,13 +5,18 @@ import cats.data.NonEmptyList
 import com.agilogy.rosetta.read.{ ReadError, Segment }
 import com.agilogy.rosetta.read.ReadError.AtomicReadError
 import com.github.ghik.silencer.silent
-import io.circe.{ CursorOp, Decoder, DecodingFailure, Error, ParsingFailure }
+import io.circe.{ CursorOp, Decoder, DecodingFailure, Encoder, Error, Json, ParsingFailure }
 import io.circe.parser.decodeAccumulating
 
 object CirceEngine {
 
   def decode[A: Decoder](s: String): Either[ReadError, A] =
     decodeAccumulating[A](s).leftMap(CirceEngine.mapReadErrors).toEither
+
+  def decode[A: Decoder](json: Json): Either[ReadError, A] =
+    Decoder[A].decodeAccumulating(json.hcursor).leftMap(CirceEngine.mapReadErrors).toEither
+
+  def encode[A: Encoder](a: A): Json = Encoder[A].apply(a)
 
   def mapReadErrors(errors: NonEmptyList[Error]): ReadError = errors.map(mapReadError).reduce
 

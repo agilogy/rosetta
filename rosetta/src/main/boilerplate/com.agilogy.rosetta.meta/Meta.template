@@ -3,6 +3,8 @@ package com.agilogy.rosetta.meta
 import scala.collection.mutable
 import scala.collection.generic.CanBuildFrom
 
+import com.github.ghik.silencer.silent
+
 sealed trait Meta[A]
 
 object Meta {
@@ -17,6 +19,7 @@ object Meta {
       iAndThen(name)(x => Right(f(x)))(g)
   }
 
+  implicit object unit extends SimpleAtom[Unit]("unit")
   implicit object boolean extends SimpleAtom[Boolean]("boolean")
   implicit object string extends SimpleAtom[String]("string")
   implicit object char extends SimpleAtom[Char]("char")
@@ -63,18 +66,25 @@ object Meta {
   }
 
 
-
-  final case class Record1[A0, A](name: String, attribute0: Attribute[A0])(val build: A0 => A)(
-    val get: A => A0
-  ) extends Record[A]
-
-  [2..22#final case class Record1[[#A0#], A](
+  [1..22#final case class Record1[A, [#A0#]](
      name: String,
     [#attribute0: Attribute[A0]#]
    )(
      val build: ([#A0#]) => A
    )(val get: A => ([#A0#]))
     extends Record[A]#
+
+  ]
+
+  [1..22#
+  @silent("OptionPartial")
+  def record[A, [#A0#]](
+     name: String,
+     [#attribute0: Attribute[A0]#]
+   )(
+     build: ([#A0#]) => A
+   )(unapply: A => scala.Option[([#A0#])]): Record1[A,[#A0#]]
+     = Record1[A,[#A0#]](name, [#attribute0#])(build)(a => unapply(a).get)#
 
   ]
 
