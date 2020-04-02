@@ -29,10 +29,10 @@ sealed trait ReadError extends Exception {
   }
 
   def ++(other: ReadError): ReadError = (this, other) match {
-    case (ReadErrors(errs1), ReadErrors(errs2))        => ReadErrors(errs1 ::: errs2)
-    case (WrongTypeReadError("Object"), ReadErrors(_)) => WrongTypeReadError("Object")
-    case (ReadErrors(_), WrongTypeReadError("Object")) => WrongTypeReadError("Object")
-    case _                                             => this
+    case (ReadErrors(errs1), ReadErrors(errs2))             => ReadErrors(errs1 ::: errs2)
+    case (WrongTypeReadError("Object", msg), ReadErrors(_)) => WrongTypeReadError("Object", msg)
+    case (ReadErrors(_), WrongTypeReadError("Object", msg)) => WrongTypeReadError("Object", msg)
+    case _                                                  => this
   }
 
 }
@@ -61,7 +61,9 @@ object ReadError {
   }
 
   def wrongType(expectedType: String): AtomicReadError = WrongTypeReadError(expectedType)
-  final case class WrongTypeReadError(message: String) extends AtomicReadError
+  final case class WrongTypeReadError(expectedType: String, details: Option[String] = None) extends AtomicReadError {
+    override def message: String = s"Wrong type error. Expected $expectedType.${details.map(" " + _).getOrElse("")}"
+  }
   final case class NativeReadError[E](message: String, error: E) extends AtomicReadError {
     override def getMessage: String = s"$message ($error)"
   }
