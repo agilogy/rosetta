@@ -73,7 +73,7 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
     simpleAtomMetaCirceEncoder(meta.meta).contramap(meta.g)
 
   def mappedAtomMetaCirceDecoder[A, B](implicit meta: Meta.MappedAtom[A, B]): Decoder[B] =
-    simpleAtomMetaCirceDecoder(meta.meta).emapTry(meta.f(_).toTry)
+    simpleAtomMetaCirceDecoder(meta.meta).emap(meta.f(_).leftMap(_.getMessage))
 
   def atomMetaCirceEncoder[A](implicit meta: Meta.Atom[A]): Encoder[A] = meta match {
     case s: Meta.SimpleAtom[A]    => simpleAtomMetaCirceEncoder(s)
