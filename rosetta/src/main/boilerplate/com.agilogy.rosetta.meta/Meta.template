@@ -41,8 +41,8 @@ object Meta {
   final case class Option[A](meta: Meta[A]) extends Meta[scala.Option[A]]
   implicit def option[A: Meta]: Option[A] = Option(Meta[A])
 
-  final case class List[L[_], A](elementsMeta: Meta[A], asIterable: L[A] => Iterable[A], builder: mutable.Builder[A, L[A]]) extends Meta[L[A]]
-  implicit def list[L[_],A: Meta](implicit cbf: CanBuildFrom[Nothing, A, L[A]], asIterable: L[A] => Iterable[A]): List[L, A] = List[L, A](Meta[A], asIterable, cbf())
+  final case class List[L[_], A](elementsMeta: Meta[A], asIterable: L[A] => Iterable[A], builder: () => mutable.Builder[A, L[A]]) extends Meta[L[A]]
+  implicit def list[L[_],A: Meta](implicit cbf: CanBuildFrom[Nothing, A, L[A]], asIterable: L[A] => Iterable[A]): List[L, A] = List[L, A](Meta[A], asIterable, cbf.apply)
 
   sealed trait Record[A] extends Meta[A] {
     def name: String

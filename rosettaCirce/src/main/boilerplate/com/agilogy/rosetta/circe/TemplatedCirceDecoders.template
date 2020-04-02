@@ -7,14 +7,14 @@ import io.circe.Decoder
 trait TemplatedCirceDecoders {  self: CirceMetaProtocol.type =>
 
   private def mcd[A](a: Attribute[A]): Decoder[A] = {
-    val baseDecoder = metaCirceDecoder[A](a.meta)
+    val baseDecoder = metaDecoder[A](a.meta)
     a match {
       case Attribute.Mandatory(_)                 => baseDecoder
       case Attribute.WithDefault(_, defaultValue) => Decoder.decodeOption(baseDecoder).map(_.getOrElse(defaultValue))
     }
   }
 
-  def recordMetaCirceDecoder[A](meta: Meta.Record[A]): Decoder[A] = meta match {
+  def recordMetaDecoder[A](meta: Meta.Record[A]): Decoder[A] = meta match {
     [#case m @ Meta.Record1(_, [#a0#]) => Decoder.forProduct1([#a0.name#])(m.build)([#mcd(a0)#])#
     ]
   }
