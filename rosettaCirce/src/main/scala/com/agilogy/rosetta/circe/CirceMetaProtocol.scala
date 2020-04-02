@@ -12,35 +12,35 @@ import com.agilogy.rosetta.meta.Meta
 object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecoders {
 
   @silent("AsInstanceOf")
-  @silent("unchecked")
-  implicit def metaCirceEncoder[A](
+  implicit def metaEncoder[A](
     implicit meta: Meta[A],
     unionCodecConfiguration: UnionCodecConfiguration[A] = UnionCodecConfiguration.structureDiscriminator[A]
   ): Encoder[A] =
     (meta match {
-      case a: Meta.Atom[A]    => atomMetaCirceEncoder(a)
-      case o: Meta.Option[A]  => optionMetaCirceEncoder(o)
-      case l: Meta.List[_, A] => listMetaCirceEncoder(l)
-      case r: Meta.Record[A]  => recordMetaCirceEncoder(r)
-      case u: Meta.Union[A]   => unionMetaCirceEncoder(u, unionCodecConfiguration)
+      case s: Meta.SimpleAtom[A]    => simpleAtomMetaEncoder(s)
+      case m: Meta.MappedAtom[_, A] => mappedAtomMetaEncoder(m)
+      case o: Meta.Option[_]        => optionMetaEncoder(o)
+      case l: Meta.List[_, _]       => listMetaEncoder(l)
+      case r: Meta.Record[A]        => recordMetaEncoder(r)
+      case u: Meta.Union[A]         => unionMetaEncoder(u, unionCodecConfiguration)
     }).asInstanceOf[Encoder[A]]
 
   @silent("AsInstanceOf")
-  @silent("unchecked")
-  implicit def metaCirceDecoder[A](
+  implicit def metaDecoder[A](
     implicit meta: Meta[A],
     unionCodecConfiguration: UnionCodecConfiguration[A] = UnionCodecConfiguration.structureDiscriminator[A]
   ): Decoder[A] =
     (meta match {
-      case a: Meta.Atom[A]    => atomMetaCirceDecoder(a)
-      case o: Meta.Option[A]  => optionMetaCirceDecoder(o)
-      case l: Meta.List[_, A] => listMetaCirceDecoder(l)
-      case r: Meta.Record[A]  => recordMetaCirceDecoder(r)
-      case u: Meta.Union[A]   => unionMetaCirceDecoder(u, unionCodecConfiguration)
+      case s: Meta.SimpleAtom[A]    => simpleAtomMetaDecoder(s)
+      case m: Meta.MappedAtom[_, A] => mappedAtomMetaDecoder(m)
+      case o: Meta.Option[_]        => optionMetaDecoder(o)
+      case l: Meta.List[_, _]       => listMetaDecoder(l)
+      case r: Meta.Record[A]        => recordMetaDecoder(r)
+      case u: Meta.Union[A]         => unionMetaDecoder(u, unionCodecConfiguration)
     }).asInstanceOf[Decoder[A]]
 
   @silent("AsInstanceOf")
-  def simpleAtomMetaCirceEncoder[A](implicit meta: Meta.SimpleAtom[A]): Encoder[A] =
+  def simpleAtomMetaEncoder[A](implicit meta: Meta.SimpleAtom[A]): Encoder[A] =
     (meta match {
       case Meta.unit    => Encoder.encodeUnit
       case Meta.boolean => Encoder.encodeBoolean
@@ -55,7 +55,7 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
     }).asInstanceOf[Encoder[A]]
 
   @silent("AsInstanceOf")
-  def simpleAtomMetaCirceDecoder[A](implicit meta: Meta.SimpleAtom[A]): Decoder[A] =
+  def simpleAtomMetaDecoder[A](implicit meta: Meta.SimpleAtom[A]): Decoder[A] =
     (meta match {
       case Meta.unit    => Decoder.decodeUnit
       case Meta.boolean => Decoder.decodeBoolean
@@ -69,40 +69,30 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
       case Meta.decimal => Decoder.decodeBigDecimal
     }).asInstanceOf[Decoder[A]]
 
-  def mappedAtomMetaCirceEncoder[A, B](implicit meta: Meta.MappedAtom[A, B]): Encoder[B] =
-    simpleAtomMetaCirceEncoder(meta.meta).contramap(meta.g)
+  def mappedAtomMetaEncoder[A, B](implicit meta: Meta.MappedAtom[A, B]): Encoder[B] =
+    simpleAtomMetaEncoder(meta.meta).contramap(meta.g)
 
-  def mappedAtomMetaCirceDecoder[A, B](implicit meta: Meta.MappedAtom[A, B]): Decoder[B] =
-    simpleAtomMetaCirceDecoder(meta.meta)
+  def mappedAtomMetaDecoder[A, B](implicit meta: Meta.MappedAtom[A, B]): Decoder[B] =
+    simpleAtomMetaDecoder(meta.meta)
       .emap(meta.f(_).leftMap(e => s"Error decoding mapped atom ${meta.name}: ${e.getMessage}"))
 
-  def atomMetaCirceEncoder[A](implicit meta: Meta.Atom[A]): Encoder[A] = meta match {
-    case s: Meta.SimpleAtom[A]    => simpleAtomMetaCirceEncoder(s)
-    case m: Meta.MappedAtom[_, A] => mappedAtomMetaCirceEncoder(m)
-  }
+  def optionMetaEncoder[A](implicit meta: Meta.Option[A]): Encoder[Option[A]] =
+    Encoder.encodeOption(metaEncoder(meta.meta))
 
-  def atomMetaCirceDecoder[A](implicit meta: Meta.Atom[A]): Decoder[A] = meta match {
-    case s: Meta.SimpleAtom[A]    => simpleAtomMetaCirceDecoder(s)
-    case m: Meta.MappedAtom[_, A] => mappedAtomMetaCirceDecoder(m)
-  }
+  def optionMetaDecoder[A](implicit meta: Meta.Option[A]): Decoder[Option[A]] =
+    Decoder.decodeOption(metaDecoder(meta.meta))
 
-  def optionMetaCirceEncoder[A](implicit meta: Meta.Option[A]): Encoder[Option[A]] =
-    Encoder.encodeOption(metaCirceEncoder(meta.meta))
+  def listMetaEncoder[L[_], A](implicit meta: Meta.List[L, A]): Encoder[L[A]] =
+    Encoder.encodeIterable(metaEncoder(meta.elementsMeta), meta.asIterable)
 
-  def optionMetaCirceDecoder[A](implicit meta: Meta.Option[A]): Decoder[Option[A]] =
-    Decoder.decodeOption(metaCirceDecoder(meta.meta))
-
-  def listMetaCirceEncoder[L[_], A](implicit meta: Meta.List[L, A]): Encoder[L[A]] =
-    Encoder.encodeIterable(metaCirceEncoder(meta.elementsMeta), meta.asIterable)
-
-  def listMetaCirceDecoder[L[_], A](implicit meta: Meta.List[L, A]): Decoder[L[A]] =
+  def listMetaDecoder[L[_], A](implicit meta: Meta.List[L, A]): Decoder[L[A]] =
     // For some reason Decoder.decodeIterable forces L to be iterable, which is unnecessary
-    new BuilderDecoder[A, L](metaCirceDecoder(meta.elementsMeta)) {
-      final protected def createBuilder(): mutable.Builder[A, L[A]] = meta.builder
+    new BuilderDecoder[A, L](metaDecoder(meta.elementsMeta)) {
+      final protected def createBuilder(): mutable.Builder[A, L[A]] = meta.builder()
     }
 
   @silent("TraversableOps")
-  def unionMetaCirceDecoder[A](
+  def unionMetaDecoder[A](
     implicit meta: Meta.Union[A],
     unionCodecConfiguration: UnionCodecConfiguration[A]
   ): Decoder[A] =
@@ -112,10 +102,10 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
           meta.options
             .find(_.name === discriminator)
             .fold(Decoder.failed[A](DecodingFailure(s"Discriminator value $discriminator is invalid", List.empty)))(
-              recordMetaCirceDecoder(_).widen[A]
+              recordMetaDecoder(_).widen[A]
             )
         }
       case None =>
-        meta.options.map(metaCirceDecoder(_).widen[A]).reduceLeft(_ or _)
+        meta.options.map(metaDecoder(_).widen[A]).reduceLeft(_ or _)
     }
 }

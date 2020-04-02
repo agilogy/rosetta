@@ -6,23 +6,23 @@ import io.circe.Encoder
 
 trait TemplatedCirceEncoders { self: CirceMetaProtocol.type =>
 
-  private def mce[A](meta: Meta[A]): Encoder[A] = metaCirceEncoder[A](meta)
+  private def me[A](meta: Meta[A]): Encoder[A] = metaEncoder[A](meta)
 
-  def recordMetaCirceEncoder[A](implicit meta:Meta.Record[A]): Encoder[A] = meta match {
+  def recordMetaEncoder[A](implicit meta:Meta.Record[A]): Encoder[A] = meta match {
     [#case m @ Meta.Record1(_, [#a0#]) =>
-      Encoder.forProduct1([#a0.name#])(m.get)([#mce(a0.meta)#])#
+      Encoder.forProduct1([#a0.name#])(m.get)([#me(a0.meta)#])#
     ]
   }
 
   // https://circe.github.io/circe/codecs/adt.html
   @silent("OptionPartial")
-  def unionMetaCirceEncoder[L[_], A](implicit meta: Meta.Union[A], unionCodecConfiguration: UnionCodecConfiguration[A]): Encoder[A] =
+  def unionMetaEncoder[L[_], A](implicit meta: Meta.Union[A], unionCodecConfiguration: UnionCodecConfiguration[A]): Encoder[A] =
     unionCodecConfiguration.discriminate(meta.name)(
       meta match {
         [2..10#case u @ Meta.Union1(_) =>
           Encoder.instance { x =>
             (
-              [#u.cast0(x).map(metaCirceEncoder(u.option0).apply) #orElse
+              [#u.cast0(x).map(metaEncoder(u.option0).apply) #orElse
               ]
             ).get
           }#
