@@ -21,9 +21,12 @@ object CirceEngine {
 
   def mapReadErrors(errors: NonEmptyList[Error]): ReadError = errors.map(mapReadError).reduce
 
+  private val MappedAtomDecodingFailure = "Error decoding mapped atom (.+): (.*)".r
+
   private def mapAtomicError(message: String): AtomicReadError = message match {
-    case "C[A]" => ReadError.WrongTypeReadError("Array")
-    case _      => ReadError.WrongTypeReadError(message)
+    case "C[A]"                                           => ReadError.WrongTypeReadError("Array")
+    case MappedAtomDecodingFailure(expectedType, message) => ReadError.WrongTypeReadError(expectedType, Some(message))
+    case _                                                => ReadError.WrongTypeReadError(message)
   }
 
   // Used the implementation of opsToPath from Circe as an inspiration
