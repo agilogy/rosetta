@@ -17,17 +17,18 @@ trait TemplatedCirceEncoders { self: CirceMetaProtocol.type =>
   // https://circe.github.io/circe/codecs/adt.html
   @silent("OptionPartial")
   def unionMetaEncoder[L[_], A](implicit meta: Meta.Union[A], unionCodecConfiguration: UnionCodecConfiguration[A]): Encoder[A] =
-    unionCodecConfiguration.discriminate(meta.name)(
+
       meta match {
         [2..10#case u @ Meta.Union1(_) =>
-          Encoder.instance { x =>
-            (
-              [#u.cast0(x).map(metaEncoder(u.option0).apply) #orElse
-              ]
-            ).get
-          }#
+
+            Encoder.instance { x =>
+              (
+                [#u.cast0(x).map(unionCodecConfiguration.discriminate(u.option0.name)(metaEncoder(u.option0)).apply) #orElse
+                ]
+              ).get
+            }#
         ]
       }
-    )
+
 
 }

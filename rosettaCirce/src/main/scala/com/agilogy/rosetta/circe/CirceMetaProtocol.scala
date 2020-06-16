@@ -101,9 +101,10 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
         discriminatorReader.flatMap { discriminator =>
           meta.options
             .find(_.name === discriminator)
-            .fold(Decoder.failed[A](DecodingFailure(s"Discriminator value $discriminator is invalid", List.empty)))(
-              recordMetaDecoder(_).widen[A]
-            )
+            .fold(Decoder.failed[A](DecodingFailure(s"Discriminator value $discriminator is invalid", List.empty))) {
+              d =>
+                Decoder.forProduct1[A, A](discriminator)(identity)(recordMetaDecoder(d).widen[A])
+            }
         }
       case None =>
         meta.options.map(metaDecoder(_).widen[A]).reduceLeft(_ or _)
