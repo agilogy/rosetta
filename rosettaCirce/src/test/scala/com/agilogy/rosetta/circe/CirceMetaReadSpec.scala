@@ -4,7 +4,7 @@ import cats.implicits._
 
 import com.agilogy.rosetta.circe.CirceEngine.decode
 import com.agilogy.rosetta.circe.CirceMetaProtocol._
-import com.agilogy.rosetta.circe.PersonMeta._
+import com.agilogy.rosetta.circe.ModelMeta._
 import com.agilogy.rosetta.read.{ ReadError, Segment }
 
 final class CirceMetaReadSpec extends munit.FunSuite {
@@ -44,6 +44,15 @@ final class CirceMetaReadSpec extends munit.FunSuite {
       Person("John", Option(Age(5)), List.empty, List.empty).asRight[ReadError]
     )
   }
+
+  test("read instances of a union meta") {
+    val value = """[{"car":{"brand":"Volkswagen","model":"Beatle"}},{"bicycle":{"color":"blue"}}]"""
+    assertEquals(
+      decode[List[Vehicle]](value),
+      List(Car("Volkswagen", "Beatle"), Bicycle("blue")).asRight[ReadError]
+    )
+  }
+
   val wrongPerson = """{"age":"young","favoriteColors":3, "brothersAges":[]}"""
   val wrongPersonErrors: ReadError =
     ReadError.MissingAttributeError.at("name") ++

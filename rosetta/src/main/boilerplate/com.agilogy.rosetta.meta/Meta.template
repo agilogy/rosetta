@@ -2,6 +2,7 @@ package com.agilogy.rosetta.meta
 
 import scala.collection.mutable
 import scala.collection.generic.CanBuildFrom
+import scala.reflect.ClassTag
 
 import com.github.ghik.silencer.silent
 
@@ -42,6 +43,7 @@ object Meta {
   implicit def option[A: Meta]: Option[A] = Option(Meta[A])
 
   final case class List[L[_], A](elementsMeta: Meta[A], asIterable: L[A] => Iterable[A], builder: () => mutable.Builder[A, L[A]]) extends Meta[L[A]]
+  // TODO: This ugly use of CanBuildForm must be removed!
   implicit def list[L[_],A: Meta](implicit cbf: CanBuildFrom[Nothing, A, L[A]], asIterable: L[A] => Iterable[A]): List[L, A] = List[L, A](Meta[A], asIterable, cbf.apply)
 
   sealed trait Record[A] extends Meta[A] {
@@ -93,12 +95,16 @@ object Meta {
     def options: scala.List[Record[_ <: A]]
   }
 
+    def cast[A](value: Any)(implicit classTag: ClassTag[A]): scala.Option[A] = value match {
+      case a: A => Some(a)
+      case _    => None
+    }
 
-  [2..10#final case class Union1[A, [#A0<:A#]](name: String)(
-    [#val cast0: A => scala.Option[A0]#]
-  )(
+  [2..10#final case class Union1[A, [#A0<:A:ClassTag#]](name: String)(
     implicit [#val option0: Meta.Record[A0]#]
   ) extends Union[A] {
+    [#val cast0: A => scala.Option[A0] = cast[A0](_)#
+    ]
     override def options: scala.List[Record[_ <: A]] = scala.List([#option0#])
   }#
 

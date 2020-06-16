@@ -1,7 +1,7 @@
 package com.agilogy.rosetta.circe
 
 import CirceMetaProtocol._
-import PersonMeta._
+import ModelMeta._
 import io.circe.Encoder
 
 import com.agilogy.rosetta.meta.Meta
@@ -66,6 +66,14 @@ final class CirceMetaWriteSpec extends munit.FunSuite {
     assertEquals(
       write(Person("Mary", Option(Age(5)), brothersAges = List(Age(3), Age(7)))),
       """{"name":"Mary","age":5,"favoriteColors":[],"brothersAges":[3,7]}"""
+    )
+  }
+
+  test("write instances of an union") {
+    val vehicles: List[Vehicle] = List(Car("Vokswagen", "Beatle"), Bicycle("blue"))
+    assertEquals(
+      write(vehicles),
+      """[{"car":{"brand":"Vokswagen","model":"Beatle"}},{"bicycle":{"color":"blue"}}]"""
     )
   }
 
