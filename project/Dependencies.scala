@@ -18,9 +18,9 @@ trait Ghik {
 
   private val org             = "com.github.ghik"
   val ghik: String            = org
-  private val silencerVersion = "1.4.4"
+  private val silencerVersion = "1.7.1"
 
-  val silencerLib         = org % "silencer-lib_2.12.10" % "1.4.4"
+  val silencerLib         = org % "silencer-lib_2.12.12" % "1.7.1"
   val silencerLibProvided = org % "silencer-lib"         % silencerVersion % Provided cross CrossVersion.full
   val silencerCompilerPlugin = compilerPlugin(
     org % "silencer-plugin" % silencerVersion cross CrossVersion.full
@@ -44,7 +44,7 @@ trait Ghostdogpr {
 trait Typelevel {
 
   private val org         = "org.typelevel"
-  private val catsVersion = "2.1.0"
+  private val catsVersion = "2.2.0"
 
   val catsKernel    = org %% "cats-kernel"    % catsVersion
   val catsCore      = org %% "cats-core"      % catsVersion
@@ -71,13 +71,13 @@ trait Scalamacros {
 
   private val org = "org.scalamacros"
 
-  val paradise = org % "paradise" % "2.1.0" cross CrossVersion.full
+  val paradise = org % "paradise" % "2.1.1" cross CrossVersion.full
 }
 
 trait Scalameta {
   private val org = "org.scalameta"
 
-  val munit = org %% "munit" % "0.4.5"
+  val munit = org %% "munit" % "0.7.15"
 
   val munitTestFramework = new TestFramework("munit.Framework")
 

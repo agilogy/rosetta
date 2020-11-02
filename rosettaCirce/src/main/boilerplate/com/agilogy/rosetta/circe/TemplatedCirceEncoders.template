@@ -19,7 +19,7 @@ trait TemplatedCirceEncoders { self: CirceMetaProtocol.type =>
   def unionMetaEncoder[L[_], A](implicit meta: Meta.Union[A], unionCodecConfiguration: UnionCodecConfiguration[A]): Encoder[A] =
 
       meta match {
-        [2..10#case u @ Meta.Union1(_) =>
+        [2..22#case u @ Meta.Union1(_) =>
 
             Encoder.instance { x =>
               (

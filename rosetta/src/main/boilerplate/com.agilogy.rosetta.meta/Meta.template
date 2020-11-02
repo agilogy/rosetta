@@ -100,7 +100,7 @@ object Meta {
       case _    => None
     }
 
-  [2..10#final case class Union1[A, [#A0<:A:ClassTag#]](name: String)(
+  [2..22#final case class Union1[A, [#A0<:A:ClassTag#]](name: String)(
     implicit [#val option0: Meta.Record[A0]#]
   ) extends Union[A] {
     [#val cast0: A => scala.Option[A0] = cast[A0](_)#
