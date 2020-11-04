@@ -5,7 +5,7 @@ import sbt.nio.Keys._
 import scala.Console
 import scalafix.sbt.ScalafixPlugin.autoImport.{ scalafixDependencies, scalafixSemanticdb }
 import explicitdeps.ExplicitDepsPlugin.autoImport._
-import wartremover._
+import wartremover.WartRemover.autoImport._
 import Dependencies._
 
 // http://eed3si9n.com/stricter-scala-with-xlint-xfatal-warnings-and-scalafix
@@ -57,7 +57,7 @@ object BuildHelper {
   private def stdSettings(prjName: String) = Seq(
     name := s"$prjName",
     organization := "com.agilogy",
-    scalaVersion in ThisBuild := "2.12.10",
+    scalaVersion in ThisBuild := "2.12.12",
     Compile / console / scalacOptions --= Seq(
       "-deprecation",
       "-Xfatal-warnings",
