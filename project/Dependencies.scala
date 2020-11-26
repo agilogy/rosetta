@@ -20,8 +20,8 @@ trait Ghik {
   val ghik: String            = org
   private val silencerVersion = "1.7.1"
 
-  val silencerLib         = org % "silencer-lib_2.12.12" % "1.7.1"
-  val silencerLibProvided = org % "silencer-lib"         % silencerVersion % Provided cross CrossVersion.full
+  val silencerLib         = org % "silencer-lib_2.13.3" % "1.7.1"
+  val silencerLibProvided = org % "silencer-lib"        % silencerVersion % Provided cross CrossVersion.full
   val silencerCompilerPlugin = compilerPlugin(
     org % "silencer-plugin" % silencerVersion cross CrossVersion.full
   )
@@ -48,7 +48,7 @@ trait Typelevel {
 
   val catsKernel    = org %% "cats-kernel"    % catsVersion
   val catsCore      = org %% "cats-core"      % catsVersion
-  val kindProjector = org %% "kind-projector" % "0.11.0" cross CrossVersion.full
+  val kindProjector = org %% "kind-projector" % "0.11.1" cross CrossVersion.full
   val simulacrum    = org %% "simulacrum"     % "1.0.0"
 }
 
@@ -67,17 +67,10 @@ trait Nequissimus {
   val sortImports = org %% "sort-imports" % "0.3.1"
 }
 
-trait Scalamacros {
-
-  private val org = "org.scalamacros"
-
-  val paradise = org % "paradise" % "2.1.1" cross CrossVersion.full
-}
-
 trait Scalameta {
   private val org = "org.scalameta"
 
-  val munit = org %% "munit" % "0.7.15"
+  val munit = org %% "munit" % "0.7.19"
 
   val munitTestFramework = new TestFramework("munit.Framework")
 
@@ -99,7 +92,6 @@ object Dependencies
     with Ghik
     with Ghostdogpr
     with Nequissimus
-    with Scalamacros
     with Scalameta
     with Scalatest
     with Typelevel

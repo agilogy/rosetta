@@ -4,6 +4,8 @@ import cats.Semigroup
 import cats.data.NonEmptyList
 import cats.implicits._
 
+import com.github.ghik.silencer.silent
+
 import com.agilogy.rosetta.read.ReadError.{ AtomicReadError, ParseError, ReadErrors, WrongTypeReadError }
 
 sealed trait Segment extends Product with Serializable
@@ -47,7 +49,7 @@ object ReadError {
 
     private def pathToString(path: NonEmptyList[Segment]) = path.toList.mkString("/")
     override def toString: String =
-      s"ReadErrors(${errors.map { case (path, error) => s"${pathToString(path)} -> $error" }})"
+      s"ReadErrors(${errors.map { case (path, error) => s"${pathToString(path)} -> ${error.toString}" }.toList.mkString(",")})"
   }
 
   object ReadErrors {
@@ -64,6 +66,8 @@ object ReadError {
   final case class WrongTypeReadError(expectedType: String, details: Option[String] = None) extends AtomicReadError {
     override def message: String = s"Wrong type error. Expected $expectedType.${details.map(" " + _).getOrElse("")}"
   }
+
+  @silent("StringPlusAny")
   final case class NativeReadError[E](message: String, error: E) extends AtomicReadError {
     override def getMessage: String = s"$message ($error)"
   }

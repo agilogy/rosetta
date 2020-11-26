@@ -31,6 +31,7 @@ object CirceEngine {
 
   // Used the implementation of opsToPath from Circe as an inspiration
   @silent("ToString")
+  @silent("StringPlusAny")
   private def cursorOpsToSegments(history: List[CursorOp]): List[Segment] =
     history
       .foldRight(List.empty[Segment]) {

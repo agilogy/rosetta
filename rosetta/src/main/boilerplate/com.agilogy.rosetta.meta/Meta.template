@@ -1,7 +1,7 @@
 package com.agilogy.rosetta.meta
 
+import scala.collection.Factory
 import scala.collection.mutable
-import scala.collection.generic.CanBuildFrom
 import scala.reflect.ClassTag
 
 import com.github.ghik.silencer.silent
@@ -42,9 +42,8 @@ object Meta {
   final case class Option[A](meta: Meta[A]) extends Meta[scala.Option[A]]
   implicit def option[A: Meta]: Option[A] = Option(Meta[A])
 
-  final case class List[L[_], A](elementsMeta: Meta[A], asIterable: L[A] => Iterable[A], builder: () => mutable.Builder[A, L[A]]) extends Meta[L[A]]
-  // TODO: This ugly use of CanBuildForm must be removed!
-  implicit def list[L[_],A: Meta](implicit cbf: CanBuildFrom[Nothing, A, L[A]], asIterable: L[A] => Iterable[A]): List[L, A] = List[L, A](Meta[A], asIterable, cbf.apply)
+  final case class List[L[_], A](elementsMeta: Meta[A], asIterable: L[A] => Iterable[A], builder: mutable.Builder[A, L[A]]) extends Meta[L[A]]
+  implicit def list[L[_],A: Meta](implicit cbf: Factory[A, L[A]], asIterable: L[A] => Iterable[A]): List[L, A] = List[L, A](Meta[A], asIterable, cbf.newBuilder)
 
   final case class Map[M[_, _], A](meta: Meta[A]) extends Meta[M[String, A]]
   implicit def map[M[_, _], A: Meta]: Map[M, A] = Map[M, A](Meta[A])
