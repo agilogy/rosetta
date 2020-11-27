@@ -90,7 +90,7 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
   def listMetaDecoder[L[_], A](implicit meta: Meta.List[L, A]): Decoder[L[A]] =
     // For some reason Decoder.decodeIterable forces L to be iterable, which is unnecessary
     new BuilderDecoder[A, L](metaDecoder(meta.elementsMeta)) {
-      final protected def createBuilder(): mutable.Builder[A, L[A]] = meta.builder
+      final protected def createBuilder(): mutable.Builder[A, L[A]] = meta.builder()
     }
 
   def mapMetaEncoder[M[_, _], A](implicit meta: Meta.Map[M, A]): Encoder[Map[String, A]] =

@@ -54,6 +54,15 @@ final class CirceMetaReadSpec extends munit.FunSuite {
     )
   }
 
+  test("read an object with an associated list".only) {
+    val _ = decode[Person]("""{"name":"John", "age":5, "favoriteColors":["red"]}""")
+
+    assertEquals(
+      decode[Person]("""{"name":"John", "age":5, "favoriteColors":["blue"]}"""),
+      Person("John", Option(Age(5)), List("blue"), List.empty).asRight[ReadError]
+    )
+  }
+
   test("read instances of a union meta") {
     val value = """[{"car":{"brand":"Volkswagen","model":"Beatle"}},{"bicycle":{"color":"blue"}}]"""
     assertEquals(

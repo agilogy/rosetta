@@ -16,51 +16,39 @@ object BuildHelper {
     Seq(
       // format: off
 
-      // Feature options
-      "-encoding", 
-      "utf-8",
-      "-explaintypes",
-      "-feature",
-      "-language:existentials",
-      "-language:experimental.macros",
-      "-language:higherKinds",
-      "-language:implicitConversions",
+      // Standard Settings
+      "-deprecation",                     // Emit warning and location for usages of deprecated APIs.
+      "-encoding",
+      "utf-8",                            // Specify character encoding used by source files.
+      "-explaintypes",                    // Explain type errors in more detail.
+      "-feature",                         // Emit warning and location for usages of features that should be imported explicitly.
+      "-language:existentials",           // Existential types (besides wildcard types) can be written and inferred
+      "-language:higherKinds",            // Allow higher-kinded types
+      "-Xcheckinit",                      // Wrap field accessors to throw an exception on uninitialized access.
+      "-Xfatal-warnings",                 // Fail the compilation if there are any warnings.
+      "-opt-warnings",
+      "-Xfuture",                         // Turn on future language features.
       "-Ymacro-annotations",
 
-      // Warnings as errors!
-      "-Xfatal-warnings",
-      "-Wconf:any:warning-verbose",
+      // Warning Settings
 
-      // Linting options
-      "-unchecked",
-      "-Xcheckinit",
-      "-Xlint:adapted-args",
-      "-Xlint:constant",
-      "-Xlint:delayedinit-select",
-      "-Xlint:deprecation",
-      "-Xlint:doc-detached",
-      "-Xlint:inaccessible",
-      "-Xlint:infer-any",
-      "-Xlint:missing-interpolator",
-      "-Xlint:nullary-unit",
-      "-Xlint:option-implicit",
-      "-Xlint:package-object-classes",
-      "-Xlint:poly-implicit-overload",
-      "-Xlint:private-shadow",
-      "-Xlint:stars-align",
-      "-Xlint:type-parameter-shadow",
-      "-Xlint:unused",
-      "-Wdead-code",
-      "-Wextra-implicit",
-      "-Wnumeric-widen",
+      "-unchecked",                       // Enable additional warnings where generated code depends on assumptions.
+      "-Wdead-code",                      // Warn when dead code is identified.
+      "-Wextra-implicit",                 // Warn when more than one implicit parameter section is defined.
+      "-Wnumeric-widen",                  // Warn when numerics are widened.
+      "-Ywarn-value-discard",             // Warn when non-Unit expression results are unused.
+      //"-Wself-implicit",                // disabled due to false negatives
       "-Wunused:implicits",
       "-Wunused:imports",
       "-Wunused:locals",
       "-Wunused:params",
       "-Wunused:patvars",
       "-Wunused:privates",
-      "-Wvalue-discard"
+      "-Wvalue-discard",
+      "-Xlint",
       
+  // Private Settings
+      "-Yrangepos"                        // Use range positions for syntax trees.
 
       // format: on
     )
