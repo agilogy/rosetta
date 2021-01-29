@@ -5,7 +5,8 @@ final case class Person(
   name: String,
   age: Option[Age],
   favoriteColors: List[String] = List.empty,
-  brothersAges: List[Age] = List.empty
+  brothersAges: List[Age] = List.empty,
+  custom: Map[String, Age] = Map.empty
 )
 final case class Department(name: String, head: Person)
 final case class Foo(dept: Department)
