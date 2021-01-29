@@ -15,7 +15,8 @@ object ModelMeta {
       "name".mandatory[String],
       "age".optional[Age],
       "favoriteColors".defaultTo(List.empty[String]),
-      "brothersAges".defaultTo(List.empty[Age])
+      "brothersAges".defaultTo(List.empty[Age]),
+      "custom".defaultTo(Map.empty[String, Age])
     )(Person)(Person.unapply)
 
   implicit val departmentMeta: Meta[Department] =

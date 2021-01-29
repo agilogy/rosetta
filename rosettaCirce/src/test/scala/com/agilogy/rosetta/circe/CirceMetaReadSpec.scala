@@ -31,10 +31,19 @@ final class CirceMetaReadSpec extends munit.FunSuite {
     )
   }
 
+  test("read a map") {
+    assertEquals(
+      decode[Map[String, String]]("""{"foo":"1", "bar": "2"}"""),
+      Map("foo" -> "1", "bar" -> "2").asRight[ReadError]
+    )
+  }
+
   test("read an object") {
     assertEquals(
-      decode[Person]("""{"name":"John", "age":5, "favoriteColors":[], "brothersAges":[]}"""),
-      Person("John", Option(Age(5)), List.empty, List.empty).asRight[ReadError]
+      decode[Person](
+        """{"name":"John", "age":5, "favoriteColors":[], "brothersAges":[],"custom":{"foo":"1", "bar": "2"}}"""
+      ),
+      Person("John", Option(Age(5)), List.empty, List.empty, Map("foo" -> Age(1), "bar" -> Age(2))).asRight[ReadError]
     )
   }
 

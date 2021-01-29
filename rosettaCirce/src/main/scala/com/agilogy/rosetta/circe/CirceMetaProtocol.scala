@@ -5,7 +5,7 @@ import scala.collection.mutable
 import cats.implicits._
 
 import com.github.ghik.silencer.silent
-import io.circe.{ BuilderDecoder, Decoder, DecodingFailure, Encoder }
+import io.circe.{ BuilderDecoder, Decoder, DecodingFailure, Encoder, KeyDecoder, KeyEncoder }
 
 import com.agilogy.rosetta.meta.Meta
 
@@ -21,6 +21,7 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
       case m: Meta.MappedAtom[_, A] => mappedAtomMetaEncoder(m)
       case o: Meta.Option[_]        => optionMetaEncoder(o)
       case l: Meta.List[_, _]       => listMetaEncoder(l)
+      case m: Meta.Map[_, _]        => mapMetaEncoder(m)
       case r: Meta.Record[A]        => recordMetaEncoder(r)
       case u: Meta.Union[A]         => unionMetaEncoder(u, unionCodecConfiguration)
     }).asInstanceOf[Encoder[A]]
@@ -35,6 +36,7 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
       case m: Meta.MappedAtom[_, A] => mappedAtomMetaDecoder(m)
       case o: Meta.Option[_]        => optionMetaDecoder(o)
       case l: Meta.List[_, _]       => listMetaDecoder(l)
+      case m: Meta.Map[_, _]        => mapMetaDecoder(m)
       case r: Meta.Record[A]        => recordMetaDecoder(r)
       case u: Meta.Union[A]         => unionMetaDecoder(u, unionCodecConfiguration)
     }).asInstanceOf[Decoder[A]]
@@ -90,6 +92,12 @@ object CirceMetaProtocol extends TemplatedCirceEncoders with TemplatedCirceDecod
     new BuilderDecoder[A, L](metaDecoder(meta.elementsMeta)) {
       final protected def createBuilder(): mutable.Builder[A, L[A]] = meta.builder()
     }
+
+  def mapMetaEncoder[M[_, _], A](implicit meta: Meta.Map[M, A]): Encoder[Map[String, A]] =
+    Encoder.encodeMap(KeyEncoder.encodeKeyString, metaEncoder(meta.meta))
+
+  def mapMetaDecoder[M[_, _], A](implicit meta: Meta.Map[M, A]): Decoder[Map[String, A]] =
+    Decoder.decodeMap(KeyDecoder.decodeKeyString, metaDecoder(meta.meta))
 
   @silent("TraversableOps")
   def unionMetaDecoder[A](

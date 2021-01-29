@@ -46,6 +46,9 @@ object Meta {
   // TODO: This ugly use of CanBuildForm must be removed!
   implicit def list[L[_],A: Meta](implicit cbf: CanBuildFrom[Nothing, A, L[A]], asIterable: L[A] => Iterable[A]): List[L, A] = List[L, A](Meta[A], asIterable, cbf.apply)
 
+  final case class Map[M[_, _], A](meta: Meta[A]) extends Meta[M[String, A]]
+  implicit def map[M[_, _], A: Meta]: Map[M, A] = Map[M, A](Meta[A])
+
   sealed trait Record[A] extends Meta[A] {
     def name: String
   }

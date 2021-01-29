@@ -44,28 +44,35 @@ final class CirceMetaWriteSpec extends munit.FunSuite {
   test("write an object") {
     assertEquals(
       write(Person("John", Option(Age(5)), List.empty, List.empty)),
-      """{"name":"John","age":5,"favoriteColors":[],"brothersAges":[]}"""
+      """{"name":"John","age":5,"favoriteColors":[],"brothersAges":[],"custom":{}}"""
     )
   }
 
   test("write an object with an optional attribute with value None") {
     assertEquals(
       write(Person("John", None, List.empty, List.empty)),
-      """{"name":"John","age":null,"favoriteColors":[],"brothersAges":[]}"""
+      """{"name":"John","age":null,"favoriteColors":[],"brothersAges":[],"custom":{}}"""
     )
   }
 
   test("write a list of primitive attributes in an object") {
     assertEquals(
       write(Person("Mary", Option(Age(5)), List("green", "blue"))),
-      """{"name":"Mary","age":5,"favoriteColors":["green","blue"],"brothersAges":[]}"""
+      """{"name":"Mary","age":5,"favoriteColors":["green","blue"],"brothersAges":[],"custom":{}}"""
     )
   }
 
   test("write a list of mapped attributes in an object") {
     assertEquals(
       write(Person("Mary", Option(Age(5)), brothersAges = List(Age(3), Age(7)))),
-      """{"name":"Mary","age":5,"favoriteColors":[],"brothersAges":[3,7]}"""
+      """{"name":"Mary","age":5,"favoriteColors":[],"brothersAges":[3,7],"custom":{}}"""
+    )
+  }
+
+  test("write map attributes in an object") {
+    assertEquals(
+      write(Person("Mary", Option(Age(5)), custom = Map("foo" -> Age(1), "bar" -> Age(2)))),
+      """{"name":"Mary","age":5,"favoriteColors":[],"brothersAges":[],"custom":{"foo":1,"bar":2}}"""
     )
   }
 
